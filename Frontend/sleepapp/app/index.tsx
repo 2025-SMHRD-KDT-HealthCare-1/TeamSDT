@@ -11,31 +11,37 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    if (!user_id || !password) {
-      Alert.alert("알림", "아이디와 비밀번호를 입력해주세요.");
+  if (!user_id || !password) {
+    Alert.alert("알림", "아이디와 비밀번호를 입력해주세요.");
+    return;
+  }
+
+  try {
+    const res = await api.post("/user/login", { user_id, password });
+
+    if (res.data.token) {
+      await AsyncStorage.setItem("token", res.data.token);
+      Alert.alert("로그인 성공!", `${user_id}님 환영합니다!`);
+      router.replace("/intro");
       return;
     }
 
-    try {
-      const res = await api.post("/user/login", {
-        user_id,
-        password,
-      });
+    Alert.alert("로그인 실패", res.data.message || "아이디 또는 비밀번호 오류");
+  } catch (err: any) {
+    console.log("LOGIN ERROR:", err);
 
-      if (res.data.token) {
-        await AsyncStorage.setItem("token", res.data.token);
-
-        Alert.alert("로그인 성공!", `${user_id}님 환영합니다!`);
-
-        router.replace("/(tabs)/home");
-      } else {
-        Alert.alert("로그인 실패", res.data.message || "정보가 올바르지 않습니다.");
-      }
-    } catch (err) {
-      console.log("LOGIN ERROR:", err);
-      Alert.alert("오류", "서버 연결 실패");
+    if (err.response && err.response.data) {
+      Alert.alert(
+        "로그인 실패",
+        err.response.data.message || "아이디 또는 비밀번호 오류"
+      );
+      return;
     }
-  };
+    
+    Alert.alert("오류", "서버 연결 실패");
+  }
+};
+
 
   return (
     <View style={styles.container}>
@@ -53,7 +59,8 @@ export default function Login() {
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.button} onPress={(handleLogin) => router.push("/intro")}>
+      {/* 🔥 여기 수정됨 */}
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>로그인</Text>
       </TouchableOpacity>
 
