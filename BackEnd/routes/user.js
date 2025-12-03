@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken");
 
 // 회원가입
 router.post("/join", async (req, res) => {
-    const { user_id, password, email, phone } = req.body;
+    const { user_id, password, nick, email, phone } = req.body;
 
     try {
         // 1) 아이디 중복 체크
@@ -31,8 +31,8 @@ router.post("/join", async (req, res) => {
         // 3) 비밀번호 암호화 후 저장
         const hashed = await bcrypt.hash(password, 10);
 
-        const sql = "INSERT INTO users (user_id, password, email, phone) VALUES (?, ?, ?, ?)";
-        await db.execute(sql, [user_id, hashed, email, phone]);
+        const sql = "INSERT INTO users (user_id, password, nick, email, phone) VALUES (?, ?, ?, ?, ?)";
+        await db.execute(sql, [user_id, hashed, nick, email, phone]);
 
         return res.json({ message: "회원가입 성공" });
 
