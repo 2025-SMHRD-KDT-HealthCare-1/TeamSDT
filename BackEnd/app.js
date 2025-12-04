@@ -33,6 +33,10 @@ app.use("/mypage", mypageRoute);
 const screenRoutes = require("./routes/screen");
 app.use("/screentime", screenRoutes);
 
+// 결과 라우터 연결
+const resultRouter = require("./routes/result");
+app.use("/result", resultRouter);
+
 app.listen(3000, () => {
-  console.log("서버 실행됨 → http://172.20.10.2:3000");
+  console.log("서버 실행됨 -> http://172.20.10.5:3000");
 });
