@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
 import styles from "../styles/screentimetrackingstyles";
-import { getAppUsageStats, AppUsage } from "../app/api/screentimeapi";
+import { getAppUsageStats, AppUsage } from "../app/api/screentime";
 
 export default function ScreenTimeTracking() {
   const [apps, setApps] = useState<AppUsage[]>([]);

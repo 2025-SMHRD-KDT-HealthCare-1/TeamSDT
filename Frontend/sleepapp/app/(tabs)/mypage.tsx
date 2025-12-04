@@ -1,38 +1,60 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
-import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Switch,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../../styles/mypagestyles";
 import {
   ChevronRight,
   Volume2,
   Mic,
   Bell,
-  Database,
-  Coffee,
-  Smartphone,
   LogOut,
   UserX,
 } from "lucide-react-native";
 
-interface MyPageProps {
-  userName?: string;
-  onLogout?: () => void;
-}
+export default function MyPage() {
+  const [userInfo, setUserInfo] = useState({
+    nick: "사용자",
+    email: "",
+    phone: "",
+  });
 
-export default function MyPage({ userName, onLogout }: MyPageProps) {
-  const safeName = userName ?? "사용자";
-  const firstLetter = safeName.charAt(0);
+  const [alarmEnabled, setAlarmEnabled] = useState(false);
+  const [sleepDetectionEnabled, setSleepDetectionEnabled] = useState(false);
+  const [notificationEnabled, setNotificationEnabled] = useState(false);
 
-  const userInfo = {
-    name: safeName,
-    email: "user@example.com",
-    phone: "010-1234-5678",
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const stored = await AsyncStorage.getItem("userData");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setUserInfo(parsed);
+        }
+      } catch (e) {
+        console.log("유저 정보 로드 실패:", e);
+      }
+    };
+
+    loadUserData();
+  }, []);
+
+  const logoutHandler = async () => {
+    try {
+      await AsyncStorage.removeItem("userData");
+      Alert.alert("로그아웃 완료", "다시 로그인 해주세요.");
+    } catch (e) {
+      Alert.alert("오류", "로그아웃 중 오류가 발생했습니다.");
+    }
   };
 
-  const logoutHandler = () => {
-    if (onLogout) onLogout();
-    else Alert.alert("로그아웃", "onLogout 함수가 없습니다.");
-  };
+  const firstLetter = userInfo.nick.charAt(0);
 
   return (
     <ScrollView style={styles.container}>
@@ -49,11 +71,11 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
             </View>
 
             <View style={{ flex: 1 }}>
-              <Text style={styles.profileName}>{safeName}님</Text>
+              <Text style={styles.profileName}>{userInfo.nick}님</Text>
 
               <TouchableOpacity
                 style={styles.profileEditBtn}
-                onPress={() => router.push("../components/profile-edit")}
+                onPress={() => console.log("프로필 편집 클릭")}
               >
                 <Text style={styles.profileEditText}>프로필 편집</Text>
               </TouchableOpacity>
@@ -74,42 +96,24 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
         {/* 설정 */}
         <Text style={styles.sectionTitle}>설정</Text>
         <View style={styles.card}>
-          <SettingButton
+          <SwitchSetting
             icon={<Volume2 color="#2d3e82" />}
             title="알람 설정"
-            onPress={() => router.push("../components/alarm")}
+            value={alarmEnabled}
+            onValueChange={setAlarmEnabled}
           />
-          <SettingButton
+          <SwitchSetting
             icon={<Mic color="#2d3e82" />}
             title="수면 감지 권한 관리"
-            onPress={() => router.push("../components/sleep-permission")}
+            value={sleepDetectionEnabled}
+            onValueChange={setSleepDetectionEnabled}
           />
-          <SettingButton
+          <SwitchSetting
             icon={<Bell color="#2d3e82" />}
             title="앱 알림 설정"
-            onPress={() => router.push("../components/notification")}
-          />
-          <SettingButton
-            icon={<Database color="#2d3e82" />}
-            title="데이터 관리"
+            value={notificationEnabled}
+            onValueChange={setNotificationEnabled}
             noBorder
-            onPress={() => router.push("../components/data")}
-          />
-        </View>
-
-        {/* 내 정보 */}
-        <Text style={styles.sectionTitle}>내 정보</Text>
-        <View style={styles.card}>
-          <SettingButton
-            icon={<Coffee color="#2d3e82" />}
-            title="카페인 기록 전체 보기"
-            onPress={() => router.push("../components/caffeine")}
-          />
-          <SettingButton
-            icon={<Smartphone color="#2d3e82" />}
-            title="스크린 타임 기록 전체 보기"
-            noBorder
-            onPress={() => router.push("../components/screentime")}
           />
         </View>
 
@@ -127,18 +131,10 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
           <TouchableOpacity
             style={[styles.settingBtn, { backgroundColor: "#fef2f2" }]}
             onPress={() =>
-              Alert.alert(
-                "회원탈퇴",
-                "정말로 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.",
-                [
-                  { text: "취소", style: "cancel" },
-                  {
-                    text: "탈퇴하기",
-                    style: "destructive",
-                    onPress: logoutHandler,
-                  },
-                ]
-              )
+              Alert.alert("회원탈퇴", "정말로 탈퇴하시겠습니까?", [
+                { text: "취소", style: "cancel" },
+                { text: "탈퇴하기", style: "destructive", onPress: logoutHandler },
+              ])
             }
           >
             <View style={styles.settingLeft}>
@@ -160,17 +156,15 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
   );
 }
 
-function SettingButton({ icon, title, noBorder = false, onPress }) {
+// 🔁 스위치 설정 컴포넌트
+function SwitchSetting({ icon, title, value, onValueChange, noBorder = false }) {
   return (
-    <TouchableOpacity
-      style={[styles.settingBtn, !noBorder && styles.settingBorder]}
-      onPress={onPress}
-    >
+    <View style={[styles.settingBtn, !noBorder && styles.settingBorder]}>
       <View style={styles.settingLeft}>
         {icon}
         <Text style={styles.settingText}>{title}</Text>
       </View>
-      <ChevronRight color="#6b7280" />
-    </TouchableOpacity>
+      <Switch value={value} onValueChange={onValueChange} />
+    </View>
   );
 }

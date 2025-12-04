@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Switch, ScrollView } from "react-native";
-import styles from "../../styles/sleepsettingstyles";
+import styles from "../../styles/measurestyles";
 import StarsBackground from "../../components/starsbackground";
 import DateTimePicker from "@react-native-community/datetimepicker";
 

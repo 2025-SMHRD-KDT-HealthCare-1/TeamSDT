@@ -19,8 +19,8 @@ def run_feedback_api(user_name, caffeine, screen_time, sleep_time, style="친근
     model = genai.GenerativeModel("gemini-2.5-flash")
 
     # 문장 로드
-    with open("docs.txt", "r", encoding="utf-8") as f:
-        sentences = [p.strip() for p in f if p.strip()]
+    BASE_DIR = Path(__file__).resolve().parent
+    with open(BASE_DIR / "docs.txt", "r", encoding="utf-8") as f:
 
     # 임베딩 모델
     embed_model = SentenceTransformer("all-MiniLM-L6-v2")

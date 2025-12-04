@@ -1,13 +1,36 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Clock, Coffee, Smartphone, Moon, TrendingUp, Volume2 } from "lucide-react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../../styles/homestyles";
 
-interface HomePageProps {
-  userName: string;
+interface UserData {
+  user_id: string;
+  nick: string;
 }
 
-export default function HomePage({ userName }: HomePageProps) {
+export default function HomePage() {
+  const [user, setUser] = useState<UserData | null>(null);
+
+  // 🔥 로그인된 유저 정보 불러오기
+  useEffect(() => {
+    async function loadUser() {
+      const saved = await AsyncStorage.getItem("user");
+      if (saved) setUser(JSON.parse(saved));
+    }
+    loadUser();
+  }, []);
+
+  // 🔥 아직 유저 정보를 못 가져왔다면
+  if (!user) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <Text>로딩 중...</Text>
+      </View>
+    );
+  }
+
+  // 🔥 서버 연결시 서버에서 받아오는 데이터
   const sleepData = {
     totalSleep: { hours: 7, minutes: 30 },
     sleepTime: { hours: 23, minutes: 20 },
@@ -28,11 +51,10 @@ export default function HomePage({ userName }: HomePageProps) {
 
   return (
     <ScrollView style={styles.container}>
-
       <View style={styles.header}>
         <View>
           <Text style={styles.welcome}>환영합니다</Text>
-          <Text style={styles.userName}>{userName}님!</Text>
+          <Text style={styles.userName}>{user.nick}님!</Text>
         </View>
 
         <View style={styles.headerIcon}>
@@ -40,6 +62,7 @@ export default function HomePage({ userName }: HomePageProps) {
         </View>
       </View>
 
+      {/* 이하 기존 코드 동일 */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardHeaderText}>오늘의 수면 리포트</Text>
@@ -113,12 +136,12 @@ export default function HomePage({ userName }: HomePageProps) {
           <View style={styles.aiIcon}>
             <TrendingUp size={26} color="white" />
           </View>
+
           <View style={{ flex: 1 }}>
             <Text style={styles.aiTitle}>AI 분석</Text>
             <Text style={styles.aiText}>
-              전날 새벽 1시까지 스마트폰 사용으로 인한 수면 지연과{"\n"}
-              카페인 섭취 시간으로 인한 수면 질 저하{"\n"}
-              카페인은 수면 6시간 전 섭취를 권장합니다.
+              전날 스마트폰 사용과 카페인 섭취 기록 기반 분석입니다.{"\n"}
+              수면 시간 6시간 전에는 카페인 섭취를 피하는 것을 권장해요!
             </Text>
           </View>
         </View>

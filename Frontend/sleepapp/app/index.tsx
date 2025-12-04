@@ -67,7 +67,7 @@ export default function Login() {
         <Text style={styles.buttonText}>로그인</Text>
       </TouchableOpacity>
 
-      {/* <View style={styles.optionsRow}>
+      <View style={styles.optionsRow}>
         <TouchableOpacity onPress={() => router.push("/join")}>
           <Text style={styles.link}>회원가입</Text>
         </TouchableOpacity>
@@ -77,7 +77,7 @@ export default function Login() {
         <TouchableOpacity onPress={() => router.push("/find-pw")}>
           <Text style={styles.link}>비밀번호 찾기</Text>
         </TouchableOpacity>
-      </View> */}
+      </View>
     </View>
   );
 }

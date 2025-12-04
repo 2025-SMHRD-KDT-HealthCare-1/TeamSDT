@@ -1,135 +1,165 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from "react-native";
-import styles from "../styles/joinstyles";
-import { useRouter } from "expo-router";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  Alert,
+} from "react-native";
+
+import { router } from "expo-router";   // ✅ 추가 (navigation 대신 router)
 import api from "./api/apiconfig";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import styles from "../styles/joinstyles";
 
 export default function Join() {
-  const router = useRouter();
-
-  const [user_id, setUserId] = useState("");
-  const [password, setPw] = useState("");
-  const [password2, setPw2] = useState("");
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordCheck, setPasswordCheck] = useState("");
   const [nick, setNick] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
-  // 🔥 아이디 중복확인 API
-  const onCheckId = async () => {
-    if (!user_id.trim()) {
-      return Alert.alert("알림", "아이디를 입력하세요.");
-    }
+  const [checkDone, setCheckDone] = useState(false);
+
+  // 🔥 아이디 중복 확인
+  const checkDuplicate = async () => {
+    if (!userId.trim()) return Alert.alert("아이디를 입력하세요");
 
     try {
-      const res = await api.get("/user/check-id", {
-        params: { user_id },
-      });
+      const res = await api.get(`/auth/check-id?user_id=${userId}`);
+      console.log("중복확인 응답:", res.data);
 
       if (res.data.exists) {
-        Alert.alert("중복됨", "이미 존재하는 아이디입니다.");
+        Alert.alert("중복된 아이디입니다!");
+        setCheckDone(false);
       } else {
-        Alert.alert("사용 가능", "사용 가능한 아이디입니다!");
+        Alert.alert("사용 가능한 아이디입니다!");
+        setCheckDone(true);
       }
     } catch (err) {
-      console.log("CHECK ID ERROR:", err);
-      Alert.alert("오류", "중복확인 중 서버 오류가 발생했습니다.");
+      console.log("중복확인 오류:", err);
+      Alert.alert("서버 오류", "중복확인 중 오류 발생");
     }
   };
 
-  const onJoin = async () => {
-    if (!user_id || !password || !password2 || !nick || !email || !phone) {
-      Alert.alert("알림", "모든 항목을 입력해주세요.");
-      return;
+  // 🔥 회원가입 요청
+  const joinHandler = async () => {
+    if (!checkDone) {
+      return Alert.alert("아이디 중복확인을 먼저 해주세요!");
     }
 
-    if (password !== password2) {
-      Alert.alert("알림", "비밀번호가 일치하지 않습니다.");
-      return;
+    if (password !== passwordCheck) {
+      return Alert.alert("비밀번호가 일치하지 않습니다.");
     }
 
     try {
-      const res = await api.post("/user/join", {
-        user_id,
+      const res = await api.post("/auth/join", {
+        user_id: userId,
         password,
         nick,
         email,
         phone,
       });
 
-      if (res.data.message === "회원가입 성공") {
-        Alert.alert("완료", "회원가입 성공!", [
-          { text: "로그인 하기", onPress: () => router.push("/") },
-        ]);
-        
-      } else {
-        Alert.alert("실패", res.data.message);
-      }
+      Alert.alert("회원가입 성공", "로그인 화면으로 이동합니다.");
+
+      // navigation.navigate("Login") ❌ (사용 불가)
+      router.replace("/");   // ✅ Expo Router 방식으로 수정
+
     } catch (err) {
-      console.log("JOIN ERROR:", err);
-      Alert.alert("오류", "회원가입 중 문제가 발생했습니다.");
+      console.log("회원가입 오류:", err.response?.data);
+      Alert.alert("회원가입 실패", err.response?.data?.message || "서버 오류");
     }
   };
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <Text style={styles.title}>회원가입</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0A1124" }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 60 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <Text style={styles.title}>회원가입</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="아이디"
-          value={user_id}
-          onChangeText={setUserId}
-        />
+            {/* 아이디 입력 + 중복확인 */}
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="아이디"
+                placeholderTextColor="#64748B"
+                value={userId}
+                onChangeText={setUserId}
+              />
+              <TouchableOpacity style={styles.smallBtn} onPress={checkDuplicate}>
+                <Text style={styles.smallBtnText}>중복확인</Text>
+              </TouchableOpacity>
+            </View>
 
-        <TouchableOpacity style={styles.smallBtn} onPress={onCheckId}>
-          <Text style={styles.smallBtnText}>중복확인</Text>
-        </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="비밀번호"
+              placeholderTextColor="#64748B"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
 
-        <TextInput
-          style={styles.input}
-          placeholder="비밀번호"
-          secureTextEntry
-          value={password}
-          onChangeText={setPw}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="비밀번호 확인"
-          secureTextEntry
-          value={password2}
-          onChangeText={setPw2}
-        />
+            <TextInput
+              style={styles.input}
+              placeholder="비밀번호 확인"
+              placeholderTextColor="#64748B"
+              secureTextEntry
+              value={passwordCheck}
+              onChangeText={setPasswordCheck}
+            />
 
-        <TextInput
-          style={styles.input}
-          placeholder="닉네임"
-          value={nick}
-          onChangeText={setNick}
-        />
+            <TextInput
+              style={styles.input}
+              placeholder="닉네임"
+              placeholderTextColor="#64748B"
+              value={nick}
+              onChangeText={setNick}
+            />
 
-        <TextInput
-          style={styles.input}
-          placeholder="이메일"
-          value={email}
-          onChangeText={setEmail}
-        />
+            <TextInput
+              style={styles.input}
+              placeholder="이메일"
+              placeholderTextColor="#64748B"
+              value={email}
+              onChangeText={setEmail}
+            />
 
-        <TextInput
-          style={styles.input}
-          placeholder="전화번호"
-          value={phone}
-          onChangeText={setPhone}
-        />
+            <TextInput
+              style={styles.input}
+              placeholder="전화번호"
+              placeholderTextColor="#64748B"
+              value={phone}
+              onChangeText={setPhone}
+            />
 
-        <TouchableOpacity style={styles.btn} onPress={onJoin}>
-          <Text style={styles.btnText}>회원가입</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.btn} onPress={joinHandler}>
+              <Text style={styles.btnText}>회원가입</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.push("/")}>
-          <Text style={styles.backBtnText}>로그인으로 돌아가기</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.replace("/")}   // ✅ 수정
+            >
+              <Text style={styles.backBtnText}>로그인으로 돌아가기</Text>
+            </TouchableOpacity>
+
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
