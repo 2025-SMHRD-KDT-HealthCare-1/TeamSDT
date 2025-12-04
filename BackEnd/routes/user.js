@@ -5,12 +5,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 
-// 회원가입
 router.post("/join", async (req, res) => {
     const { user_id, password, nick, email, phone } = req.body;
 
     try {
-        // 1) 아이디 중복 체크
         const [idRows] = await db.execute(
             "SELECT user_id FROM users WHERE user_id = ?",
             [user_id]
@@ -19,7 +17,6 @@ router.post("/join", async (req, res) => {
             return res.status(400).json({ message: "이미 존재하는 아이디입니다." });
         }
 
-        // 2) 이메일 중복 체크
         const [emailRows] = await db.execute(
             "SELECT email FROM users WHERE email = ?",
             [email]
@@ -28,7 +25,6 @@ router.post("/join", async (req, res) => {
             return res.status(400).json({ message: "이미 가입된 이메일입니다." });
         }
 
-        // 3) 비밀번호 암호화 후 저장
         const hashed = await bcrypt.hash(password, 10);
 
         const sql = "INSERT INTO users (user_id, password, nick, email, phone) VALUES (?, ?, ?, ?, ?)";
@@ -42,7 +38,6 @@ router.post("/join", async (req, res) => {
 });
 
 
-// 로그인
 router.post("/login", async (req, res) => {
     const { user_id, password } = req.body;
 
@@ -59,7 +54,6 @@ router.post("/login", async (req, res) => {
         if (!isMatch)
             return res.status(400).json({ message: "비밀번호 틀림" });
 
-        // JWT 발급
         const token = jwt.sign(
             { user_id: rows[0].user_id },
             process.env.JWT_SECRET,
@@ -77,7 +71,6 @@ router.post("/login", async (req, res) => {
 });
 
 
-// 자동 로그인 검증 API
 router.get("/check", async (req, res) => {
     try {
         const token = req.headers.authorization?.split(" ")[1];
@@ -98,7 +91,6 @@ router.get("/check", async (req, res) => {
     }
 });
 
-// 아이디 찾기 (이메일 기반)
 router.post("/find-id", async (req, res) => {
     const { email } = req.body;
 
@@ -124,18 +116,14 @@ router.post("/find-id", async (req, res) => {
     }
 });
 
-// 임시 비밀번호 생성 함수
 function generateTempPassword() {
-    // 8자리 임시 비밀번호
     return Math.random().toString(36).slice(2, 10);
 }
 
-// 비밀번호 재설정 (임시 비밀번호 발급) → 이메일과 아이디가 매칭 시 비밀번호 재설정
 router.post("/reset-password", async (req, res) => {
     const { user_id, email } = req.body;
 
     try {
-        // user_id + email이 매칭되는 계정 찾기
         const [rows] = await db.execute(
             "SELECT * FROM users WHERE user_id = ? AND email = ?",
             [user_id, email]
@@ -145,11 +133,9 @@ router.post("/reset-password", async (req, res) => {
             return res.status(400).json({ message: "정보가 일치하지 않습니다." });
         }
 
-        // 임시 비밀번호 생성
         const tempPassword = generateTempPassword();
         const hashed = await bcrypt.hash(tempPassword, 10);
 
-        // DB 비밀번호 업데이트
         await db.execute(
             "UPDATE users SET password = ? WHERE user_id = ?",
             [hashed, user_id]
@@ -168,7 +154,6 @@ router.post("/reset-password", async (req, res) => {
 });
 
 
-// 아이디 중복 확인
 router.get("/check-id", async (req, res) => {
     const { user_id } = req.query;
 
@@ -179,9 +164,9 @@ router.get("/check-id", async (req, res) => {
         );
 
         if (rows.length > 0) {
-            return res.json({ exists: true });  // 아이디 있음
+            return res.json({ exists: true });
         } else {
-            return res.json({ exists: false }); // 아이디 없음
+            return res.json({ exists: false });
         }
 
     } catch (err) {
@@ -191,12 +176,10 @@ router.get("/check-id", async (req, res) => {
 
 const auth = require("../middleware/auth");
 
-// 자동로그인 체크
 router.get("/auto-login", auth, async (req, res) => {
     try {
         const user_id = req.user.user_id;
 
-        // 유저 정보 가져오기
         const [rows] = await db.execute(
             "SELECT user_id, email, phone FROM users WHERE user_id = ?",
             [user_id]

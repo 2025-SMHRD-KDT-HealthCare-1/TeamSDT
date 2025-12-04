@@ -34,5 +34,5 @@ const screenRoutes = require("./routes/screen");
 app.use("/screentime", screenRoutes);
 
 app.listen(3000, () => {
-  console.log("서버 실행됨 → http://172.20.10.2:3000");
+  console.log("서버 실행됨 → http://172.20.10.3:3000");
 });

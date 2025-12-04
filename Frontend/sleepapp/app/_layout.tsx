@@ -1,7 +1,7 @@
 import { Stack, Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import api from "./apiconfig";
+import api from "./api/apiconfig";
 import { ActivityIndicator, View } from "react-native";
 
 export default function RootLayout() {

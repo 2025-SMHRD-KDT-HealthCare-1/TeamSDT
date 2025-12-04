@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
-import api from "../app/apiconfig";    // ← 네가 만든 axios 인스턴스 사용!
+import api from "../app/api/apiconfig";    // ← 네가 만든 axios 인스턴스 사용!
 import styles from "../styles/caffeinetrackingstyles";
 
 function convertLabel(original: string) {

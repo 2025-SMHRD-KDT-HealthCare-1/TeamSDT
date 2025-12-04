@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "../styles/findpwstyles";
-import api from "./apiconfig";
+import api from "./api/apiconfig";
 
 export default function FindPw() {
   const router = useRouter();

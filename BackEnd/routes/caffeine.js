@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db/database");
 
-// 스타벅스 용량 → 사이즈명 변환 함수
 function convertStarbucksSize(volume) {
   const num = parseInt(volume.replace(/[^0-9]/g, ""));
 
@@ -13,10 +12,9 @@ function convertStarbucksSize(volume) {
   if (num === 710) return "Trenta";
   if (num === 946) return "Venti (Hot)";
 
-  return volume; // 매칭 안되면 그대로 반환
+  return volume;
 }
 
-// label 정제 함수 (주석 건들지 않고 내부만 추가)
 function normalizeLabel(original) {
   let label = original;
 
@@ -30,8 +28,6 @@ function normalizeLabel(original) {
   return label.replace(/\s+/g, " ").trim();
 }
 
-// 1) 브랜드 목록 가져오기
-// GET /caffeine/brands
 router.get("/brands", async (req, res) => {
   try {
     const [rows] = await db.execute(
@@ -45,7 +41,6 @@ router.get("/brands", async (req, res) => {
   }
 });
 
-// 2) 선택한 브랜드의 메뉴 목록 가져오기 + label/menu_key 반환
 router.get("/menus", async (req, res) => {
   const { brand } = req.query;
 
@@ -64,22 +59,16 @@ router.get("/menus", async (req, res) => {
 
   let label = original;
 
-  // 1) prefix 제거
   label = label.replace(/^(커피_|스무디_커피_|스무디_)/, "");
 
-  // 2) 카페 제거
   label = label.replace(/^카페\s*/, "");
 
-  // 3) 뒤에 사이즈 제거
   label = label.replace(/\s*\((Short|Tall|Grande|Venti \(Iced\)|Venti \(Hot\)|Trenta)\)\s*$/, "");
 
-  // 4) (ICED)(HOT) 표기 통합
   label = label.replace(/\(ICED\)/gi, "ICED").replace(/\(HOT\)/gi, "HOT");
 
-  // 5) 한글 온도 제거
   label = label.replace(/아이스/gi, "").replace(/핫/gi, "");
 
-  // 6) 모카/라떼 → 카페모카 / 카페라떼
   if (/^모카/i.test(label)) {
     label = "카페" + label;
   }
@@ -87,7 +76,6 @@ router.get("/menus", async (req, res) => {
     label = "카페" + label;
   }
 
-  // 7) 정리
   label = label.replace(/ICEDICED/gi, "ICED").replace(/HOTHOT/gi, "HOT");
   label = label.replace(/\s+/g, " ").trim();
 
@@ -105,7 +93,6 @@ router.get("/menus", async (req, res) => {
   }
 });
 
-// 3) 사이즈 + 카페인 mg 조회 API (수정함!)
 router.get("/sizes", async (req, res) => {
   const { brand, menu_key } = req.query;
 
@@ -142,8 +129,6 @@ router.get("/sizes", async (req, res) => {
 });
 
 
-// 4) 복수 음료 카페인 총합 계산
-// POST /caffeine/calc
 router.post("/calc", async (req, res) => {
   const { items } = req.body;
   if (!items) return res.status(400).json({ message: "items 필요" });

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from "react-native";
 import styles from "../styles/joinstyles";
 import { useRouter } from "expo-router";
-import api from "./apiconfig";
+import api from "./api/apiconfig";
 
 export default function Join() {
   const router = useRouter();

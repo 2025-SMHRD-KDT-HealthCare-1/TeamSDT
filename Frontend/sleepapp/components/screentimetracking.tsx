@@ -1,27 +1,37 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, ActivityIndicator } from "react-native";
 import styles from "../styles/screentimetrackingstyles";
-
-type AppUsage = {
-  id: string;
-  name: string;
-  minutes: number;
-  color: string;
-};
+import { getAppUsageStats, AppUsage } from "../app/api/screentimeapi";
 
 export default function ScreenTimeTracking() {
-  // 더미 데이터 (나중에 API 연동 가능)
-  const [apps] = useState<AppUsage[]>([
-    { id: "1", name: "카카오톡", minutes: 65, color: "#FFD93D" }, // 노랑
-    { id: "2", name: "유튜브", minutes: 120, color: "#FF1E1E" }, // 빨강
-    { id: "3", name: "인스타그램", minutes: 45, color: "#FF6B81" }, // 분홍
-    { id: "4", name: "크롬", minutes: 30, color: "#60A5FA" }, // 파랑
-    { id: "5", name: "네이버", minutes: 25, color: "#2ECC71" }, // 초록
-  ]);
+  const [apps, setApps] = useState<AppUsage[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUsageData = async () => {
+      const data = await getAppUsageStats();
+
+      // color 값이 없을 경우 랜덤 색상 지정
+      const colored = data.map((app, index) => ({
+        ...app,
+        color: app.color || getColorByIndex(index),
+        id: app.packageName || index.toString(),
+      }));
+
+      setApps(colored);
+      setLoading(false);
+    };
+
+    fetchUsageData();
+  }, []);
+
+  const getColorByIndex = (index: number) => {
+    const colors = ["#FFD93D", "#FF1E1E", "#FF6B81", "#60A5FA", "#2ECC71"];
+    return colors[index % colors.length];
+  };
 
   const todayTotal = apps.reduce((s, a) => s + a.minutes, 0);
 
-  // 전날/주/달 비교 (예시)
   const yesterday = 135;
   const weekAvg = 160;
   const monthAvg = 150;
@@ -33,12 +43,23 @@ export default function ScreenTimeTracking() {
     return { text: "변화 없음", type: "same" };
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#999" />
+        <Text style={{ marginTop: 12 }}>스크린타임 데이터를 불러오는 중...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {/* 오늘 총 스크린타임 */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>오늘 총 스크린타임</Text>
-        <Text style={styles.totalTime}>{Math.floor(todayTotal / 60)}시간 {todayTotal % 60}분</Text>
+        <Text style={styles.totalTime}>
+          {Math.floor(todayTotal / 60)}시간 {todayTotal % 60}분
+        </Text>
       </View>
 
       {/* 앱 리스트 */}

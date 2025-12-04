@@ -51,7 +51,6 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
             <View style={{ flex: 1 }}>
               <Text style={styles.profileName}>{safeName}님</Text>
 
-              {/* 🔥 프로필 편집 페이지 이동 */}
               <TouchableOpacity
                 style={styles.profileEditBtn}
                 onPress={() => router.push("../components/profile-edit")}
@@ -125,7 +124,6 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
             <ChevronRight color="#6b7280" />
           </TouchableOpacity>
 
-          {/* 🔥 회원탈퇴 */}
           <TouchableOpacity
             style={[styles.settingBtn, { backgroundColor: "#fef2f2" }]}
             onPress={() =>
@@ -162,17 +160,7 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
   );
 }
 
-function SettingButton({
-  icon,
-  title,
-  noBorder = false,
-  onPress,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  noBorder?: boolean;
-  onPress?: () => void;
-}) {
+function SettingButton({ icon, title, noBorder = false, onPress }) {
   return (
     <TouchableOpacity
       style={[styles.settingBtn, !noBorder && styles.settingBorder]}

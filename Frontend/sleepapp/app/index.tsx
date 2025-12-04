@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import api from "./apiconfig";
+import api from "./api/apiconfig";
 import styles from "../styles/loginstyles";
 
 export default function Login() {
@@ -18,8 +18,9 @@ export default function Login() {
 
   try {
     const res = await api.post("/user/login", { user_id, password });
-
+    console.log('Test1')
     if (res.data.token) {
+      console.log('Test1')
       await AsyncStorage.setItem("token", res.data.token);
       Alert.alert("로그인 성공!", `${user_id}님 환영합니다!`);
       router.replace("/intro");
@@ -28,6 +29,8 @@ export default function Login() {
 
     Alert.alert("로그인 실패", res.data.message || "아이디 또는 비밀번호 오류");
   } catch (err: any) {
+    console.log("test2333")
+    console.log(err)
     console.log("LOGIN ERROR:", err);
 
     if (err.response && err.response.data) {
@@ -64,7 +67,7 @@ export default function Login() {
         <Text style={styles.buttonText}>로그인</Text>
       </TouchableOpacity>
 
-      <View style={styles.optionsRow}>
+      {/* <View style={styles.optionsRow}>
         <TouchableOpacity onPress={() => router.push("/join")}>
           <Text style={styles.link}>회원가입</Text>
         </TouchableOpacity>
@@ -74,7 +77,7 @@ export default function Login() {
         <TouchableOpacity onPress={() => router.push("/find-pw")}>
           <Text style={styles.link}>비밀번호 찾기</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
     </View>
   );
 }

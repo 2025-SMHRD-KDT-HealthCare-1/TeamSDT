@@ -1,7 +1,11 @@
 const express = require("express");
-const router = express.Router();  // 이 줄이 반드시 필요합니다
+const router = express.Router();
 const { spawn } = require("child_process");
 const path = require("path");
+
+router.get("/", (req, res) => {
+  res.send("AI 통계 라우터에 오신 것을 환영합니다!");
+})
 
 router.post("/", (req, res) => {
   console.log("/ai 라우터에 진입함!");
@@ -10,7 +14,6 @@ router.post("/", (req, res) => {
   try {
     const py = spawn("python", [pythonFile]);
 
-    // JSON 형식으로 Python에 전달
     py.stdin.write(JSON.stringify(req.body));
     py.stdin.end();
     console.log("Post Body:", req.body);
@@ -41,5 +44,4 @@ router.post("/", (req, res) => {
   }
 });
 
-// 마지막에 router를 export
 module.exports = router;
