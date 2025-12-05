@@ -2,6 +2,16 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db/database");
 
+router.post("/", (req, res) => {
+  const { caffeine, sleep_time, screen_time } = req.body;
+
+  return res.json({
+    caffeine,
+    sleep_time,
+    screen_time
+  });
+});
+
 // 시간차 계산 (23:00 ~ 07:00 이런 케이스 처리됨)
 function calcTimeDiff(sleep, wake) {
   const [sh, sm] = sleep.split(":").map(Number);

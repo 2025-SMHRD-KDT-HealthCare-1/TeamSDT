@@ -20,6 +20,10 @@ app.use("/caffeine", caffeineRouter);
 const aiRoutes = require("./routes/ai-statistics");
 app.use("/ai", aiRoutes);
 
+// AI-Result 통합
+const analysisRouter = require("./routes/analysis");
+app.use("/analysis", analysisRouter);
+
 // Test 라우터 연결
 const testRoutes = require("./routes/test");
 app.use("/test", testRoutes);
