@@ -155,4 +155,40 @@ router.get("/check-id", async (req, res) => {
   }
 });
 
+// 회원 정보 조회 (홈 / 마이페이지 공용) - users 테이블 기준 최종본
+router.get("/profile/:user_id", async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const [rows] = await db.execute(
+      `
+      SELECT user_id, nick, email, phone 
+      FROM users 
+      WHERE user_id = ? AND is_deleted = 0
+      `,
+      [user_id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "회원 정보 없음" });
+    }
+
+    return res.json(rows[0]);
+    // 반환 예시:
+    // {
+    //   user_id: "test01",
+    //   nick: "민찬",
+    //   email: "test@test.com",
+    //   phone: "01012345678"
+    // }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "회원 정보 조회 실패",
+      error: err,
+    });
+  }
+});
+
+
 module.exports = router;

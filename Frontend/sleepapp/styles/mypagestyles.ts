@@ -19,11 +19,10 @@ export default StyleSheet.create({
 
   header: {
     backgroundColor: "#3e4f93",
-    paddingVertical: 30,
+    paddingVertical: 34,
     paddingHorizontal: 24,
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
-    marginBottom: 20,
   },
 
   headerTitle: {
@@ -34,25 +33,39 @@ export default StyleSheet.create({
 
   innerContainer: {
     paddingHorizontal: 20,
+    paddingTop: 20,
     paddingBottom: 60,
   },
 
   profileSection: {
     alignItems: "center",
-    paddingVertical: 30,
+    marginBottom: 20,
   },
 
-  profileEmoji: { fontSize: 80 },
-  profileName: { color: "white", fontSize: 26, marginTop: 10 },
-  profileDesc: { color: "#b4bfd9", fontSize: 16, marginTop: 4 },
+  profileEmoji: {
+    fontSize: 80,
+    marginBottom: 8,
+  },
+
+  profileName: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "300",
+  },
+
+  profileDesc: {
+    color: "#b4bfd9",
+    fontSize: 16,
+    marginTop: 4,
+  },
 
   card: {
     backgroundColor: "rgba(20, 27, 46, 0.9)",
-    borderRadius: 30,
+    borderRadius: 24,
     padding: 20,
     borderWidth: 1,
     borderColor: "rgba(45, 53, 97, 0.4)",
-    marginBottom: 30,
+    marginBottom: 26,
   },
 
   cardHeader: {
@@ -70,8 +83,8 @@ export default StyleSheet.create({
 
   calendarButton: {
     backgroundColor: "#1a2040",
-    padding: 16,
-    borderRadius: 20,
+    paddingVertical: 14,
+    borderRadius: 16,
     alignItems: "center",
   },
 
@@ -80,11 +93,39 @@ export default StyleSheet.create({
     fontSize: 16,
   },
 
+  /** 하루 기록 */
+  dayRecordCard: {
+    backgroundColor: "rgba(20, 27, 46, 0.9)",
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(45, 53, 97, 0.4)",
+    marginBottom: 26,
+  },
+
+  dayRecordTitle: {
+    color: "white",
+    fontSize: 20,
+    marginBottom: 10,
+  },
+
+  dayRecordText: {
+    color: "white",
+    fontSize: 16,
+    paddingVertical: 4,
+  },
+
+  noDataText: {
+    color: "#b4bfd9",
+    fontSize: 16,
+    textAlign: "center",
+    paddingVertical: 10,
+  },
+
   rowButton: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 20,
-    paddingHorizontal: 4,
   },
 
   rowButtonBorder: {
@@ -92,13 +133,13 @@ export default StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#2d3561",
+    borderColor: "#2d3561",
   },
 
   rowLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
   },
 
   rowText: {
@@ -117,12 +158,27 @@ export default StyleSheet.create({
     paddingVertical: 20,
   },
 
-  deleteText: { color: "#ef4444", fontSize: 18 },
-  deleteArrow: { color: "#ef4444", fontSize: 24 },
+  deleteText: {
+    color: "#ef4444",
+    fontSize: 18,
+  },
 
-  bottomSection: { alignItems: "center", paddingVertical: 30 },
-  bottomText: { color: "#7b8fc9", fontSize: 18 },
+  deleteArrow: {
+    color: "#ef4444",
+    fontSize: 24,
+  },
 
+  bottomSection: {
+    alignItems: "center",
+    marginTop: 20,
+  },
+
+  bottomText: {
+    color: "#7b8fc9",
+    fontSize: 18,
+  },
+
+  /** 모달 */
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
@@ -139,32 +195,43 @@ export default StyleSheet.create({
     borderColor: "#2d3561",
   },
 
-  modalTitle: { color: "white", fontSize: 22, fontWeight: "bold" },
-  modalDesc: { color: "#b4bfd9", fontSize: 16, marginVertical: 16 },
+  modalTitle: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "bold",
+  },
+
+  modalDesc: {
+    color: "#b4bfd9",
+    fontSize: 16,
+    marginVertical: 16,
+  },
 
   modalButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
+    marginTop: 14,
   },
 
   cancelBtn: {
     flex: 1,
-    padding: 12,
-    borderRadius: 10,
     borderWidth: 1,
     borderColor: "#2d3561",
+    padding: 12,
+    borderRadius: 12,
     marginRight: 10,
   },
 
-  cancelBtnText: { color: "#b4bfd9", textAlign: "center" },
+  cancelBtnText: {
+    color: "#b4bfd9",
+    textAlign: "center",
+  },
 
   deleteBtn: {
     flex: 1,
-    padding: 12,
-    borderRadius: 10,
     backgroundColor: "#ef4444",
-    marginLeft: 10,
+    padding: 12,
+    borderRadius: 12,
   },
 
   deleteBtnLabel: {
