@@ -3,144 +3,172 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f7fb",
+    backgroundColor: "#0a0d1a",
+  },
+
+  starsContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: -1,
+  },
+
+  star: {
+    position: "absolute",
+    backgroundColor: "#ffffffaa",
+    borderRadius: 50,
   },
 
   header: {
+    backgroundColor: "#3e4f93",
     paddingVertical: 30,
-    paddingHorizontal: 20,
-    backgroundColor: "#2d3e82",
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+    marginBottom: 20,
   },
 
   headerTitle: {
-    color: "#fff",
+    color: "white",
     fontSize: 22,
-    fontWeight: "bold",
+    fontWeight: "300",
   },
 
-  content: {
-    padding: 20,
+  innerContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 60,
   },
 
-  card: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    marginBottom: 24,
-    elevation: 3,
-  },
-
-  /* --- 프로필 상단 --- */
-  profileTop: {
-    flexDirection: "row",
+  profileSection: {
     alignItems: "center",
-    marginBottom: 16,
-  },
-
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#2d3e82",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 14,
-  },
-
-  avatarText: {
-    color: "#fff",
-    fontSize: 26,
-    fontWeight: "bold",
-  },
-
-  profileName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#111",
-    marginBottom: 6,
-  },
-
-  profileEditBtn: {
-    paddingVertical: 4,
-  },
-
-  profileEditText: {
-    color: "#2d3e82",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-
-  /* --- 정보 라인 --- */
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-  },
-
-  infoLabel: {
-    color: "#6b7280",
-    fontSize: 14,
-  },
-
-  infoValue: {
-    color: "#111",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-
-  /* --- 섹션 타이틀 --- */
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111",
-    marginBottom: 10,
-    marginTop: 10,
-  },
-
-  /* --- 설정 버튼 --- */
-  settingBtn: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 14,
-  },
-
-  settingLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  settingText: {
-    fontSize: 16,
-    marginLeft: 12,
-    color: "#111",
-  },
-
-  settingBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-  },
-
-  /* --- 캐릭터 안내 박스 --- */
-  characterBox: {
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
     paddingVertical: 30,
   },
 
-  characterEmoji: {
-    fontSize: 40,
-    marginBottom: 10,
+  profileEmoji: { fontSize: 80 },
+  profileName: { color: "white", fontSize: 26, marginTop: 10 },
+  profileDesc: { color: "#b4bfd9", fontSize: 16, marginTop: 4 },
+
+  card: {
+    backgroundColor: "rgba(20, 27, 46, 0.9)",
+    borderRadius: 30,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(45, 53, 97, 0.4)",
+    marginBottom: 30,
   },
 
-  characterText: {
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 14,
+  },
+
+  cardTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "400",
+  },
+
+  calendarButton: {
+    backgroundColor: "#1a2040",
+    padding: 16,
+    borderRadius: 20,
+    alignItems: "center",
+  },
+
+  calendarButtonText: {
+    color: "white",
     fontSize: 16,
-    color: "#6b7280",
+  },
+
+  rowButton: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 20,
+    paddingHorizontal: 4,
+  },
+
+  rowButtonBorder: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#2d3561",
+  },
+
+  rowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  rowText: {
+    color: "white",
+    fontSize: 18,
+  },
+
+  rowArrow: {
+    color: "#b4bfd9",
+    fontSize: 24,
+  },
+
+  deleteButton: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 20,
+  },
+
+  deleteText: { color: "#ef4444", fontSize: 18 },
+  deleteArrow: { color: "#ef4444", fontSize: 24 },
+
+  bottomSection: { alignItems: "center", paddingVertical: 30 },
+  bottomText: { color: "#7b8fc9", fontSize: 18 },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+
+  modalBox: {
+    width: "80%",
+    backgroundColor: "#141b2e",
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#2d3561",
+  },
+
+  modalTitle: { color: "white", fontSize: 22, fontWeight: "bold" },
+  modalDesc: { color: "#b4bfd9", fontSize: 16, marginVertical: 16 },
+
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+
+  cancelBtn: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#2d3561",
+    marginRight: 10,
+  },
+
+  cancelBtnText: { color: "#b4bfd9", textAlign: "center" },
+
+  deleteBtn: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "#ef4444",
+    marginLeft: 10,
+  },
+
+  deleteBtnLabel: {
+    color: "white",
+    textAlign: "center",
   },
 });
