@@ -46,7 +46,7 @@ router.post("/", (req, res) => {
       }
 
       try {
-        // 🔥 이제 result 자체가 JSON 문자열이기 때문에 바로 파싱 가능
+        // 이제 result 자체가 JSON 문자열이기 때문에 바로 파싱 가능
         const jsonResult = JSON.parse(result);
         return res.json(jsonResult);
       } catch (err) {
