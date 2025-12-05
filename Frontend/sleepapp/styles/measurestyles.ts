@@ -2,70 +2,153 @@ import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
   container: {
-    padding: 24,
-    paddingTop: 50,
-    backgroundColor: "#0A1124",   // 딥네이비 톤
     flex: 1,
+    backgroundColor: "#0a0d1a",
   },
 
-  sectionTitle: {
-    color: "#ffffff",
-    fontSize: 18,
-    marginTop: 26,
+  starsContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: "hidden",
+    zIndex: -1,
+  },
+
+  star: {
+    position: "absolute",
+    borderRadius: 50,
+    backgroundColor: "#ffffffaa",
+  },
+
+  header: {
+    backgroundColor: "#3e4f93",
+    paddingVertical: 30,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+    marginBottom: 20,
+  },
+
+  headerTitle: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "300",
+  },
+
+  innerContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 60,
+  },
+
+  characterWrap: {
+    alignItems: "center",
+    paddingVertical: 30,
+  },
+
+  characterEmoji: {
+    fontSize: 80,
     marginBottom: 10,
-    fontWeight: "700",
   },
 
-  // 시간 선택 박스 (수면시간, 기상시간)
-  timeBtn: {
-    backgroundColor: "#0B1324",     // 다크 input 스타일
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 14,
+  characterText: {
+    color: "#b4bfd9",
+    fontSize: 20,
+    fontWeight: "300",
+  },
+
+  card: {
+    backgroundColor: "rgba(20, 27, 46, 0.9)",
     borderWidth: 1,
-    borderColor: "#1E293B",
+    borderColor: "rgba(45, 53, 97, 0.4)",
+    padding: 24,
+    borderRadius: 30,
+    marginBottom: 40,
   },
 
-  timeText: {
-    color: "#CBD5E1",
+  label: {
+    color: "#b4bfd9",
+    textAlign: "center",
     fontSize: 18,
-    fontWeight: "500",
+    fontWeight: "300",
+    marginBottom: 4,
   },
 
-  // 옵션 (토글, 체크 등 row)
-  optionRow: {
+  subLabel: {
+    color: "#5b6fb9",
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "300",
+    marginBottom: 14,
+  },
+
+  timeBox: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1E293B",   // 은은한 라인
-  },
-
-  optionLabel: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-
-  // 측정 시작 버튼
-  startBtn: {
-    backgroundColor: "#3B82F6",
-    paddingVertical: 16,
-    borderRadius: 14,
-    marginTop: 40,
-    alignItems: "center",
     justifyContent: "center",
-
-    shadowColor: "#3B82F6",
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 5,
+    alignItems: "center",
+    gap: 20,
+    backgroundColor: "#1a2040",
+    borderWidth: 2,
+    borderColor: "#5b6fb9",
+    padding: 30,
+    borderRadius: 30,
   },
 
-  startBtnText: {
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "700",
+  icon: {
+    opacity: 0.9,
+  },
+
+  iconDelay: {
+    opacity: 0.9,
+  },
+
+  timeInput: {
+    color: "white",
+    fontSize: 42,
+    textAlign: "center",
+    fontWeight: "200",
+    width: 140,
+  },
+
+  bottomText: {
+    marginTop: 16,
+    textAlign: "center",
+    color: "#7b8fc9",
+    fontSize: 16,
+    fontWeight: "300",
+  },
+
+  sleepPreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+  },
+
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#2d3561",
+  },
+
+  sleepCenter: {
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
+
+  sleepHour: {
+    fontSize: 36,
+    color: "white",
+    fontWeight: "300",
+  },
+
+  saveBtn: {
+    marginTop: 20,
+    backgroundColor: "#5b6fb9",
+    paddingVertical: 24,
+    borderRadius: 30,
+    alignItems: "center",
+  },
+
+  saveBtnText: {
+    color: "white",
+    fontSize: 26,
+    fontWeight: "400",
   },
 });

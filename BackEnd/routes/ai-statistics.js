@@ -29,24 +29,30 @@ router.post("/", (req, res) => {
       result += data.toString();
     });
 
+    py.stderr.on("data", (data) => {
+      console.error("stderr:", data.toString());
+    });
+
     py.stderr.on("data", (err) => {
       console.error("Python stderr:", err.toString());
     });
 
     py.on("close", (code) => {
-      console.log("Python 종료 코드:", code);
+      console.log("Python 종료:", code);
+      console.log("Python Raw Output:", result);
 
       if (code !== 0) {
-        return res.status(500).json({
-          success: false,
-          error: "Python 실행 중 오류 발생",
-        });
+        return res.status(500).json({ error: "Python process error" });
       }
 
-      return res.json({
-        success: true,
-        answer: result.trim(),
-      });
+      try {
+        // 이제 result 자체가 JSON 문자열이기 때문에 바로 파싱 가능
+        const jsonResult = JSON.parse(result);
+        return res.json(jsonResult);
+      } catch (err) {
+        console.error("JSON 파싱 오류:", err);
+        return res.status(500).json({ error: "JSON parsing failed" });
+      }
     });
   } catch (err) {
     console.error("서버 오류:", err);

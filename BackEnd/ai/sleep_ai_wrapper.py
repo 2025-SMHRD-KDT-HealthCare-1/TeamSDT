@@ -9,7 +9,7 @@ os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 import warnings
 warnings.filterwarnings("ignore")
-from sleep_ai import run_feedback_api  # sleep_ai.py에 있는 함수 가져오기
+from sleep_ai import run_feedback_api, tts_generate_memory  # sleep_ai.py에 있는 함수 가져오기
 
 if __name__ == "__main__":
     # 터미널에서 받은 입력 처리
@@ -28,7 +28,18 @@ if __name__ == "__main__":
     style = params.get("style", "친근하게")
 
     # AI 피드백 실행
-    result = run_feedback_api(user_name, caffeine, screen_time, sleep_time, style)
+    result_text = run_feedback_api(user_name, caffeine, screen_time, sleep_time, style)
 
-    # 결과 출력
-    sys.stdout.buffer.write(result.encode("utf-8"))
+    # Base64 음성 생성
+    audio_base64 = tts_generate_memory(result_text)
+
+    # JSON 형태로만 출력 (print 하나만!)
+    output = {
+        "text": result_text,
+        "audio_base64": True      
+    }
+
+    # JSON만 딱 1줄 출력
+    # 4) JSON을 UTF-8 바이트로 출력 (가장 중요)
+    sys.stdout.buffer.write(json.dumps(output, ensure_ascii=False).encode("utf-8"))
+    sys.stdout.flush()
