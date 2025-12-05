@@ -16,7 +16,6 @@ app.use("/user", userRouter);
 const caffeineRouter = require("./routes/caffeine");
 app.use("/caffeine", caffeineRouter);
 
-
 // AI 라우터 연결
 const aiRoutes = require("./routes/ai-statistics");
 app.use("/ai", aiRoutes);
