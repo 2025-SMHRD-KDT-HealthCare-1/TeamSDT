@@ -1,56 +1,46 @@
-// /app/api/screentime.ts
-import { NativeModules, Platform, Linking } from "react-native";
+import { NativeModules, Platform } from "react-native";
 
-const { UsageStatsModule } = NativeModules;
+const { ScreenTime } = NativeModules;
+export const getTodayScreenTime = async (): Promise<number> => {
+  if (Platform.OS !== "android") {
+    console.warn("스크린타임 API는 Android에서만 동작합니다.");
+    return 0;
+  }
 
-export type AppUsage = {
-  id: string;
-  packageName: string;
-  name: string;
-  minutes: number;
-  color?: string;
+  try {
+    const timeMs = await ScreenTime.getTodayScreenTime();
+    return Math.floor(timeMs / 1000);
+  } catch (error) {
+    console.log("ScreenTime API Error:", error);
+    return 0;
+  }
 };
 
-/**
- * 스크린타임 사용 권한 체크
- */
-export async function checkScreenTimePermission(): Promise<boolean> {
-  if (Platform.OS !== "android") return false;
-
-  try {
-    const has = await UsageStatsModule.hasPermission();
-
-    if (!has) {
-      Linking.openSettings();
-    }
-
-    return has;
-  } catch (e) {
-    console.error("스크린타임 권한 체크 오류:", e);
-    return false;
-  }
+export interface AppUsage {
+  name: string;
+  packageName: string;
+  minutes: number;
+  id?: string;
+  color?: string;
 }
 
-/**
- * 오늘 스크린타임 가져오기
- * 네이티브 모듈 → UsageStatsModule.getDailyUsage()
- */
-async function getTodayScreenTime(): Promise<AppUsage[]> {
+
+export const getAppUsageStats = async (): Promise<AppUsage[]> => {
   if (Platform.OS !== "android") {
-    console.warn("스크린타임은 Android 전용입니다.");
+    console.warn("앱별 스크린타임 API는 Android에서만 동작합니다.");
     return [];
   }
-  try {
-    const usage: AppUsage[] = await UsageStatsModule.getDailyUsage();
-    return usage;
-  } catch (err) {
-    console.error("스크린타임 가져오는 중 오류:", err);
-    return [];
-  }
-}
 
-/**
- * 화면에서 사용하는 함수 이름: getAppUsageStats()
- * => 내부적으로 getTodayScreenTime() 호출
- */
-export const getAppUsageStats = getTodayScreenTime;
+  try {
+    const result = await ScreenTime.getAppUsageStats(); // ← Java 모듈에서 구현되어야 함
+    return result;
+  } catch (error) {
+    console.log("AppUsageStats Error:", error);
+    return [];
+  }
+};
+
+export default {
+  getTodayScreenTime,
+  getAppUsageStats,
+};

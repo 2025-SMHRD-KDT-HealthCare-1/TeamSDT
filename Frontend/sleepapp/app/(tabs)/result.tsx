@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // ✅ 정석 SafeArea
+import { SafeAreaView } from "react-native-safe-area-context";
 import styles from "../../styles/resultstyles";
 import api from "../api/apiconfig";
 
@@ -25,8 +25,13 @@ export default function SleepResult() {
     try {
       setError(null);
       const res = await api.get(`/result/sleep?period=${tab}`);
-      setGraphData(res.data.graph);
-      setAiData(res.data.ai);
+
+      // 그래프 데이터 확인 후 안전하게 변환
+      const graph = Array.isArray(res.data.graph) ? res.data.graph : [];
+      setGraphData(graph);
+
+      // AI 분석 데이터 검증 후 저장
+      setAiData(res.data.ai ?? null);
     } catch (err) {
       setError("서버 연결 실패");
     }
@@ -35,7 +40,7 @@ export default function SleepResult() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0E1529" }}>
       <ScrollView style={styles.container}>
-        {/* ✅ 상단 탭 */}
+        {/* 🔵 상단 탭 */}
         <View style={styles.tabContainer}>
           {[
             { key: "day", label: "일" },
@@ -44,7 +49,7 @@ export default function SleepResult() {
             { key: "all", label: "전체" },
           ].map((item) => (
             <TouchableOpacity
-              key={item.key}
+              key={`tab-${item.key}`} // 🔥 유니크 key
               style={[styles.tabBtn, tab === item.key && styles.tabSelected]}
               onPress={() => setTab(item.key as TabType)}
             >
@@ -60,7 +65,7 @@ export default function SleepResult() {
           ))}
         </View>
 
-        {/* ✅ 그래프 */}
+        {/* 🔵 그래프 */}
         <View style={styles.graphContainer}>
           <Text style={styles.graphTitle}>수면 시간</Text>
 
@@ -72,14 +77,15 @@ export default function SleepResult() {
             <View style={styles.barChartWrapper}>
               {graphData.map((item, idx) => {
                 const maxHour = 10;
-                const ratio = item.sleep / maxHour;
-                const barHeight = Math.min(ratio * 140, 140);
+                const sleep = Number(item.sleep) || 0;
 
-                // ✅ 수면시간 높을수록 더 진해지는 색
+                // 비율과 색상 안정 처리
+                const ratio = Math.min(Math.max(sleep / maxHour, 0), 1);
+                const barHeight = ratio * 140;
                 const barColor = `rgba(110,168,254,${0.3 + ratio * 0.7})`;
 
                 return (
-                  <View key={idx} style={styles.barItem}>
+                  <View key={`${item.label}-${idx}`} style={styles.barItem}>
                     <View
                       style={[
                         styles.bar,
@@ -89,21 +95,11 @@ export default function SleepResult() {
                         },
                       ]}
                     />
-                    <Text
-                      style={[
-                        styles.barLabel,
-                        { color: barColor },
-                      ]}
-                    >
+                    <Text style={[styles.barLabel, { color: barColor }]}>
                       {item.label}
                     </Text>
-                    <Text
-                      style={[
-                        styles.barValue,
-                        { color: barColor },
-                      ]}
-                    >
-                      {item.sleep}h
+                    <Text style={[styles.barValue, { color: barColor }]}>
+                      {sleep}h
                     </Text>
                   </View>
                 );
@@ -112,7 +108,7 @@ export default function SleepResult() {
           )}
         </View>
 
-        {/* ✅ AI 분석 영역 */}
+        {/* 🔵 AI 분석 */}
         <View style={styles.aiBox}>
           <View style={styles.aiTitleRow}>
             <Text style={styles.aiIcon}>📈</Text>
@@ -131,12 +127,10 @@ export default function SleepResult() {
           )}
         </View>
 
-        {/* ✅ 하단 */}
+        {/* 🔵 하단 */}
         <View style={styles.footerSection}>
           <Text style={styles.emoji}>😎🛏️</Text>
-          <Text style={styles.footerText}>
-            계속 좋은 수면 습관을 유지하세요!
-          </Text>
+          <Text style={styles.footerText}>좋은 수면 습관을 유지하세요!</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

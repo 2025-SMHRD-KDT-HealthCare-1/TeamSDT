@@ -1,4 +1,3 @@
-// styles/screenTimeTracking.styles.ts
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
@@ -27,7 +26,6 @@ export default StyleSheet.create({
     fontWeight: "800",
   },
 
-  /* 앱 리스트 */
   sectionTitle: {
     color: "#F3F4F6",
     fontSize: 16,
@@ -68,7 +66,6 @@ export default StyleSheet.create({
     borderRadius: 999,
   },
 
-  /* 비교 카드 */
   compareRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -113,5 +110,20 @@ export default StyleSheet.create({
     color: "#9CA3AF",
     fontSize: 13,
     marginTop: 20,
+  },
+
+  noDataText: {
+    color: "#E5E7EB",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: 30,
+  },
+
+  noDataSubText: {
+    color: "#9CA3AF",
+    fontSize: 13,
+    textAlign: "center",
+    marginTop: 6,
   },
 });
