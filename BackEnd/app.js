@@ -36,6 +36,10 @@ app.use("/screentime", screenRoutes);
 const resultRouter = require("./routes/result");
 app.use("/result", resultRouter);
 
+// 권한 동의 라우터 연결
+const permissionRouter = require("./routes/permission");
+app.use("/permission", permissionRouter);
+
 app.listen(3000, () => {
   console.log("서버 실행됨 -> http://172.20.10.5:3000");
 });
