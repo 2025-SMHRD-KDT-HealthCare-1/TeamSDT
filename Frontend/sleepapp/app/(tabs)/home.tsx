@@ -12,7 +12,6 @@ interface UserData {
 export default function HomePage() {
   const [user, setUser] = useState<UserData | null>(null);
 
-  // 🔥 로그인된 유저 정보 불러오기
   useEffect(() => {
     async function loadUser() {
       const saved = await AsyncStorage.getItem("user");
@@ -21,7 +20,6 @@ export default function HomePage() {
     loadUser();
   }, []);
 
-  // 🔥 아직 유저 정보를 못 가져왔다면
   if (!user) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -30,7 +28,6 @@ export default function HomePage() {
     );
   }
 
-  // 🔥 서버 연결시 서버에서 받아오는 데이터
   const sleepData = {
     totalSleep: { hours: 7, minutes: 30 },
     sleepTime: { hours: 23, minutes: 20 },
@@ -62,7 +59,6 @@ export default function HomePage() {
         </View>
       </View>
 
-      {/* 이하 기존 코드 동일 */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardHeaderText}>오늘의 수면 리포트</Text>
