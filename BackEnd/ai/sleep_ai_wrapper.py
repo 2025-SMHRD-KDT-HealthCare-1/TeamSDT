@@ -36,7 +36,7 @@ if __name__ == "__main__":
     # JSON 형태로만 출력 (print 하나만!)
     output = {
         "text": result_text,
-        "audio_base64": True      
+        "audio_base64": audio_base64      
     }
 
     # JSON만 딱 1줄 출력
