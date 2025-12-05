@@ -1,88 +1,100 @@
 const express = require("express");
 const router = express.Router();
+const db = require("../db/database");
 
-// 더미 데이터 (나중에 DB로 교체 가능)
-const RESULT_DATA = {
+// 시간차 계산 (23:00 ~ 07:00 이런 케이스 처리됨)
+function calcTimeDiff(sleep, wake) {
+  const [sh, sm] = sleep.split(":").map(Number);
+  const [wh, wm] = wake.split(":").map(Number);
 
-  // GET http://172.20.10.5:3000/result/sleep?period=day
-  day: {
-    graph: [
-      { label: "0시", sleep: 0 },
-      { label: "2시", sleep: 1 },
-      { label: "4시", sleep: 2 },
-      { label: "6시", sleep: 3 },
-      { label: "8시", sleep: 1 },
-    ],
-    ai: {
-      summary: "어제 총 수면 시간은 6시간입니다.",
-      problem: "취침 시간이 늦었습니다.",
-      effect: "수면 집중도가 감소했습니다.",
-      solution: "오늘은 23시 이전 취침을 추천합니다.",
-    },
-  },
+  let start = sh * 60 + sm;
+  let end = wh * 60 + wm;
 
-  // GET http://172.20.10.5:3000/result/sleep?period=week
-  week: {
-    graph: [
-      { label: "월", sleep: 6.5 },
-      { label: "화", sleep: 7.2 },
-      { label: "수", sleep: 8.0 },
-      { label: "목", sleep: 6.8 },
-      { label: "금", sleep: 6.1 },
-      { label: "토", sleep: 9.0 },
-      { label: "일", sleep: 8.7 },
-    ],
-    ai: {
-      summary: "이번 주 평균 수면은 7시간 30분입니다.",
-      problem: "평일 취침 시간이 평균 30분 지연되었습니다.",
-      effect: "수면 효율이 15% 감소했습니다.",
-      solution: "23시 이전 취침을 권장합니다.",
-    },
-  },
+  if (end < start) end += 24 * 60; // 자정 넘김 처리
 
-  // GET http://172.20.10.5:3000/result/sleep?period=month
-  month: {
-    graph: [
-      { label: "1주", sleep: 7.1 },
-      { label: "2주", sleep: 6.8 },
-      { label: "3주", sleep: 7.9 },
-      { label: "4주", sleep: 8.0 },
-    ],
-    ai: {
-      summary: "이번 달 평균 수면은 7시간 45분입니다.",
-      problem: "야간 스마트폰 사용이 잦았습니다.",
-      effect: "입면 시간이 평균 25분 지연되었습니다.",
-      solution: "취침 전 스마트폰 사용을 줄이세요.",
-    },
-  },
+  return (end - start) / 60;
+}
 
-  // GET http://172.20.10.5:3000/result/sleep?period=all
-  all: {
-    graph: [
-      { label: "1월", sleep: 7.3 },
-      { label: "2월", sleep: 6.9 },
-      { label: "3월", sleep: 8.1 },
-    ],
-    ai: {
-      summary: "최근 3개월 평균 수면은 7시간 25분입니다.",
-      problem: "수면 패턴 편차가 큽니다.",
-      effect: "회복 효율이 일정하지 않습니다.",
-      solution: "취침 시간을 고정하는 것이 중요합니다.",
-    },
-  },
-};
+// period 그룹핑
+function groupByPeriod(data, period) {
+  const map = {};
 
-// 핵심 API
-router.get("/sleep", (req, res) => {
+  data.forEach(({ date, sleep }) => {
+    const d = new Date(date);
+    let key = "";
+
+    if (period === "day") key = `${d.getHours()}시`;
+    if (period === "week") key = ["일","월","화","수","목","금","토"][d.getDay()];
+    if (period === "month") key = `${Math.ceil(d.getDate() / 7)}주`;
+    if (period === "all") key = `${d.getMonth() + 1}월`;
+
+    map[key] = (map[key] || 0) + sleep;
+  });
+
+  return Object.entries(map).map(([label, sleep]) => ({
+    label,
+    sleep: Number(sleep.toFixed(1)),
+  }));
+}
+
+// 최종 API
+router.get("/sleep", async (req, res) => {
   const { period } = req.query;
+  const user_id = req.query.user_id;
 
-  if (!period || !RESULT_DATA[period]) {
-    return res.status(400).json({
-      message: "period 값이 올바르지 않습니다. (day | week | month | all)",
-    });
+  if (!["day", "week", "month", "all"].includes(period)) {
+    return res.status(400).json({ message: "period 오류" });
   }
 
-  return res.status(200).json(RESULT_DATA[period]);
+  try {
+    // 수면 설정
+    const [settingRows] = await db.execute(
+      `SELECT SleepTime, WakeTime FROM SleepSetting WHERE UserID = ?`,
+      [user_id]
+    );
+
+    const sleepSetting = settingRows[0];
+    if (!sleepSetting) {
+      return res.status(400).json({ message: "수면 설정 없음" });
+    }
+
+    const baseSleepTime = calcTimeDiff(
+      sleepSetting.SleepTime,
+      sleepSetting.WakeTime
+    );
+
+    // 스크린타임 기록
+    const [screenRows] = await db.execute(
+      `SELECT DateValue, Total_ScreenTime FROM ScreenTimeRecord WHERE UserID = ?`,
+      [user_id]
+    );
+
+    // 실제 수면시간 계산
+    const rawSleepData = screenRows.map(row => {
+      const nightScreen = row.Total_ScreenTime / 60; // 분 → 시간
+      const realSleep = Math.max(baseSleepTime - nightScreen, 0);
+
+      return {
+        date: row.DateValue,
+        sleep: Number(realSleep.toFixed(1)),
+      };
+    });
+
+    const graph = groupByPeriod(rawSleepData, period);
+
+    // AI 분석 
+    const ai = {
+      summary: `최근 평균 수면 ${graph.length ? graph[0].sleep : 0}시간`,
+      problem: "야간 스마트폰 사용 과다",
+      effect: "수면 효율 저하",
+      solution: "취침 전 스마트폰 사용을 줄이세요",
+    };
+
+    res.json({ graph, ai });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "수면 분석 실패" });
+  }
 });
 
 module.exports = router;
