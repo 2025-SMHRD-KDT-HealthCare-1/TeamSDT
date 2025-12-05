@@ -7,6 +7,19 @@ from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer, CrossEncoder
 import google.generativeai as genai
 
+from gtts import gTTS
+from io import BytesIO
+import base64
+
+def tts_generate_memory(text):
+    mp3_fp = BytesIO()
+    tts = gTTS(text=text, lang='ko')
+    tts.write_to_fp(mp3_fp)
+    mp3_fp.seek(0)
+
+    # Base64로 인코딩해서 Node에 전달
+    audio_base64 = base64.b64encode(mp3_fp.read()).decode('utf-8')
+    return audio_base64
 
 def run_feedback_api(user_name, caffeine, screen_time, sleep_time, style="친근하게"):
     # ✅ .env 로드
