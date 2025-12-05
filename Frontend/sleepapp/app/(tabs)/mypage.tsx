@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,20 +9,34 @@ import {
 import { Bell, LogOut, UserX, Calendar as CalendarIcon } from "lucide-react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import styles from "../../styles/mypagestyles";
+import api from "../api/apiconfig";
 
 interface MyPageProps {
-  userName: string;
   onLogout: () => void;
 }
 
-export default function MyPage({ userName, onLogout }: MyPageProps) {
+export default function MyPage({ onLogout }: MyPageProps) {
+  const [nick, setNick] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  // 📌 로그인된 유저 정보 가져오기
+  useEffect(() => {
+    fetchMyInfo();
+  }, []);
+
+  const fetchMyInfo = async () => {
+    try {
+      const res = await api.get("/user/me"); // 🔥 너희 백엔드에 맞는 유저 정보 API 넣기
+      setNick(res.data.nick); // 닉네임 저장
+    } catch (err) {
+      console.log("사용자 정보 불러오기 실패:", err);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
-
       {/* ⭐ 별 배경 */}
       <View style={styles.starsContainer}>
         {Array.from({ length: 80 }).map((_, i) => (
@@ -50,11 +64,15 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
 
       {/* 본문 */}
       <View style={styles.innerContainer}>
-
         {/* 프로필 */}
         <View style={styles.profileSection}>
           <Text style={styles.profileEmoji}>🦥</Text>
-          <Text style={styles.profileName}>{userName}님</Text>
+
+          {/* 🔥 닉네임님 제대로 출력 */}
+          <Text style={styles.profileName}>
+            {nick ? `${nick}님` : "사용자님"}
+          </Text>
+
           <Text style={styles.profileDesc}>편안한 수면을 즐기고 계세요</Text>
         </View>
 

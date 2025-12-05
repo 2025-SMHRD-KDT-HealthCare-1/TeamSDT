@@ -1,223 +1,231 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#0A1124"   // 전체 딥네이비
+  container: {
+    flex: 1,
+    backgroundColor: "#0a0d1a",
+    paddingHorizontal: 20,
+    paddingBottom: 40,
   },
 
-  /* Header */
+  /* ⭐ 헤더 */
   header: {
-    padding: 26,
-    paddingTop: 60,
-    backgroundColor: "#0F162D",
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    backgroundColor: "#3e4f93",
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+    marginBottom: 28,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 18,
-    elevation: 6,
   },
 
-  welcome: { 
-    color: "#94A3B8", 
-    fontSize: 15, 
-    marginBottom: 4 
+  welcome: {
+    color: "#cdd5f3",
+    fontSize: 15,
+    fontWeight: "300",
   },
 
-  userName: { 
-    color: "#ffffff", 
-    fontSize: 24, 
-    fontWeight: "700" 
+  username: {
+    color: "white",
+    fontSize: 26,
+    fontWeight: "500",
+    marginTop: 2,
   },
 
-  headerIcon: {
-    width: 60,
-    height: 60,
-    backgroundColor: "rgba(255,255,255,0.12)",
+  headerIconBox: {
+    width: 55,
+    height: 55,
+    borderRadius: 30,
+    backgroundColor: "#ffffff33",
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 999,
   },
 
-  /* Card */
+  /* ⭐ 카드 공통 */
   card: {
-    backgroundColor: "#0F162D",
-    marginHorizontal: 20,
-    marginTop: 26,
-    borderRadius: 20,
+    backgroundColor: "rgba(20, 27, 46, 0.92)",
+    borderRadius: 28,
+    paddingBottom: 18,
+    borderWidth: 1,
+    borderColor: "rgba(45, 53, 97, 0.4)",
+    marginBottom: 26,
     overflow: "hidden",
-
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
 
   cardHeader: {
-    backgroundColor: "#1C2A47",
-    padding: 18,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: "#3e4f93",
+    paddingVertical: 14,
+    paddingHorizontal: 18,
   },
 
   cardHeaderText: {
-    color: "#ffffff",
-    fontSize: 17,
-    fontWeight: "600",
+    color: "white",
+    fontSize: 18,
+    fontWeight: "400",
   },
 
   cardBody: {
     padding: 20,
-    backgroundColor: "#0F162D",
+    gap: 20,
   },
 
-  /* Row */
+  /* ⭐ 수면 시간 행 */
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1E293B",
   },
 
-  row: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    gap: 10 
+  rowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
   },
 
   iconCircle: {
     width: 48,
     height: 48,
-    backgroundColor: "#1A2236",
+    borderRadius: 30,
+    backgroundColor: "#1a2040",
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 999,
   },
 
-  label: { 
-    color: "#CBD5E1", 
+  label: {
+    color: "#b4bfd9",
     fontSize: 14,
-    marginBottom: 2 
   },
 
-  value: { 
-    color: "#3B82F6", 
-    fontSize: 17, 
-    fontWeight: "600" 
+  mainValue: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "500",
   },
 
-  badge: {
+  /* ⭐ 수면 점수 배지 */
+  qualityBadge: {
     paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: "#1E293B",
+    paddingHorizontal: 14,
     borderRadius: 20,
   },
 
-  timeGrid: {
+  qualityText: {
+    color: "white",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  /* ⭐ 잠든 시간/기상 시간 박스 */
+  timeBox: {
+    backgroundColor: "#141b2e",
+    borderRadius: 22,
+    padding: 18,
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
+  },
+
+  timeItem: {
+    flex: 1,
+  },
+
+  timeLabel: {
+    color: "#b4bfd9",
+    marginBottom: 6,
+  },
+
+  timeValue: {
+    color: "#dbe4ff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  /* ⭐ 사용시간 · 카페인 */
+  statItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#1a2040",
+    padding: 16,
+    borderRadius: 18,
+  },
+
+  statLabel: {
+    color: "#cdd5f3",
+    flex: 1,
+    fontSize: 15,
+  },
+
+  statValue: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+
+  /* ⭐ AI 카드 */
+  aiCard: {
+    backgroundColor: "#3e4f93",
+    padding: 20,
+    borderRadius: 28,
+    marginTop: 10,
+  },
+
+  aiRow: {
+    flexDirection: "row",
     gap: 14,
   },
 
-  timeBox: {
-    backgroundColor: "#1A2236",
-    padding: 16,
-    borderRadius: 16,
-    width: "48%",
-  },
-
-  infoBox: {
-    backgroundColor: "#1A2236",
-    padding: 16,
-    borderRadius: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 14,
-  },
-
-  infoLabel: { 
-    color: "#CBD5E1", 
-    fontSize: 14 
-  },
-
-  infoValue: { 
-    color: "#3B82F6", 
-    fontSize: 14,
-    fontWeight: "600" 
-  },
-
-  /* AI 카드 */
-  aiCard: {
-    backgroundColor: "#1C2A47",
-    marginHorizontal: 20,
-    padding: 20,
-    borderRadius: 20,
-    marginTop: 20,
-  },
-
-  aiIcon: {
-    width: 48,
-    height: 48,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderRadius: 999,
+  aiIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 30,
+    backgroundColor: "#ffffff22",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 14,
   },
 
-  aiTitle: { 
-    color: "#ffffff", 
-    fontSize: 18, 
-    fontWeight: "600",
-    marginBottom: 6 
+  aiTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "500",
+    marginBottom: 6,
   },
 
-  aiText: { 
-    color: "#CBD5E1", 
-    opacity: 0.9, 
-    lineHeight: 20 
+  aiText: {
+    color: "#e3e9ff",
+    fontSize: 15,
+    lineHeight: 21,
   },
 
   aiButton: {
-    marginTop: 16,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    padding: 14,
+    marginTop: 20,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    paddingVertical: 12,
     borderRadius: 14,
-    flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
-    gap: 8,
   },
 
-  aiButtonText: { 
-    color: "#ffffff", 
+  aiButtonText: {
+    color: "white",
     fontSize: 15,
     fontWeight: "500",
-    marginLeft: 6 
   },
 
-  /* Bottom */
-  characterBox: { 
-    alignItems: "center", 
-    marginVertical: 30 
+  /* ⭐ 하단 캐릭터 */
+  bottomCharacter: {
+    alignItems: "center",
+    marginTop: 20,
+    paddingBottom: 80,
   },
 
-  characterEmoji: { 
-    fontSize: 50, 
-    marginBottom: 6 
+  characterEmoji: {
+    fontSize: 60,
   },
 
-  characterText: { 
-    color: "#64748B", 
-    fontSize: 16 
+  bottomMessage: {
+    color: "#b4bfd9",
+    fontSize: 16,
+    marginTop: 8,
   },
 });
