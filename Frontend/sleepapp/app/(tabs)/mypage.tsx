@@ -12,7 +12,7 @@ import {
   UserX,
   Calendar as CalendarIcon,
 } from "lucide-react-native";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { Calendar } from "react-native-calendars";
 import styles from "../../styles/mypagestyles";
 
 interface MyPageProps {
@@ -21,36 +21,33 @@ interface MyPageProps {
 }
 
 export default function MyPage({ userName, onLogout }: MyPageProps) {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
   const [dailyData, setDailyData] = useState<any>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // 더미 데이터 (추후 서버 데이터로 교체 가능)
+  // --- 더미 데이터 (추후 DB 연결 가능) ---
   const dummyData: any = {
     "2025-02-01": {
       sleep: "7시간 30분",
       screentime: "3시간 15분",
       caffeine: "150mg",
     },
-    "2025-02-02": {
-      sleep: "6시간 10분",
+    "2025-02-05": {
+      sleep: "6시간 20분",
       screentime: "2시간 40분",
       caffeine: "없음",
     },
   };
 
+  // 날짜 선택 시 하루 기록 갱신
   useEffect(() => {
-    const y = selectedDate.getFullYear();
-    const m = (selectedDate.getMonth() + 1).toString().padStart(2, "0");
-    const d = selectedDate.getDate().toString().padStart(2, "0");
-
-    const key = `${y}-${m}-${d}`;
-    setDailyData(dummyData[key] || null);
+    if (!selectedDate) return;
+    setDailyData(dummyData[selectedDate] || null);
   }, [selectedDate]);
 
   return (
     <ScrollView style={styles.container}>
+
       {/* ⭐ 별 배경 */}
       <View style={styles.starsContainer}>
         {Array.from({ length: 80 }).map((_, i) => (
@@ -78,6 +75,7 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
 
       {/* 본문 */}
       <View style={styles.innerContainer}>
+
         {/* 프로필 */}
         <View style={styles.profileSection}>
           <Text style={styles.profileEmoji}>🦥</Text>
@@ -85,35 +83,34 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
           <Text style={styles.profileDesc}>편안한 수면을 즐기고 계세요</Text>
         </View>
 
-        {/* 캘린더 영역 */}
+        {/* 달력 카드 */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <CalendarIcon size={26} color="#5b6fb9" />
             <Text style={styles.cardTitle}>수면 캘린더</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.calendarButton}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={styles.calendarButtonText}>
-              선택된 날짜: {selectedDate.toLocaleDateString()}
-            </Text>
-          </TouchableOpacity>
-
-          <DateTimePickerModal
-            isVisible={showDatePicker}
-            mode="date"
-            date={selectedDate}
-            onConfirm={(date) => {
-              setSelectedDate(date);
-              setShowDatePicker(false);
+          <Calendar
+            onDayPress={(day) => setSelectedDate(day.dateString)}
+            markedDates={{
+              [selectedDate]: {
+                selected: true,
+                selectedColor: "#5b6fb9",
+              },
             }}
-            onCancel={() => setShowDatePicker(false)}
+            theme={{
+              backgroundColor: "transparent",
+              calendarBackground: "transparent",
+              dayTextColor: "#ffffff",
+              monthTextColor: "#ffffff",
+              arrowColor: "#5b6fb9",
+              selectedDayTextColor: "#fff",
+              todayTextColor: "#7b8fc9",
+            }}
           />
         </View>
 
-        {/* 하루 기록 */}
+        {/* 하루 기록 카드 */}
         <View style={styles.dayRecordCard}>
           <Text style={styles.dayRecordTitle}>📅 하루 기록</Text>
 
@@ -134,7 +131,7 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
           )}
         </View>
 
-        {/* 알림 설정 */}
+        {/* 앱 알림 설정 */}
         <View style={styles.card}>
           <TouchableOpacity style={styles.rowButton}>
             <View style={styles.rowLeft}>
@@ -147,7 +144,10 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
 
         {/* 로그아웃 + 회원탈퇴 */}
         <View style={styles.card}>
-          <TouchableOpacity onPress={onLogout} style={styles.rowButtonBorder}>
+          <TouchableOpacity
+            onPress={onLogout}
+            style={styles.rowButtonBorder}
+          >
             <View style={styles.rowLeft}>
               <LogOut size={26} color="#5b6fb9" />
               <Text style={styles.rowText}>로그아웃</Text>
@@ -174,12 +174,12 @@ export default function MyPage({ userName, onLogout }: MyPageProps) {
       </View>
 
       {/* 회원탈퇴 모달 */}
-      <Modal transparent visible={showDeleteModal} animationType="fade">
+      <Modal visible={showDeleteModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>회원탈퇴</Text>
             <Text style={styles.modalDesc}>
-              정말로 탈퇴하시겠습니까? 모든 데이터가 삭제되며 복구할 수 없습니다.
+              정말로 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.
             </Text>
 
             <View style={styles.modalButtons}>

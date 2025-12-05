@@ -81,6 +81,7 @@ export default StyleSheet.create({
     fontWeight: "400",
   },
 
+  /** 달력 버튼 */
   calendarButton: {
     backgroundColor: "#1a2040",
     paddingVertical: 14,
@@ -93,7 +94,7 @@ export default StyleSheet.create({
     fontSize: 16,
   },
 
-  /** 하루 기록 */
+  /** 하루 기록 카드 */
   dayRecordCard: {
     backgroundColor: "rgba(20, 27, 46, 0.9)",
     padding: 20,
@@ -122,6 +123,7 @@ export default StyleSheet.create({
     paddingVertical: 10,
   },
 
+  /** 리스트 버튼 */
   rowButton: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -168,6 +170,7 @@ export default StyleSheet.create({
     fontSize: 24,
   },
 
+  /** 하단 */
   bottomSection: {
     alignItems: "center",
     marginTop: 20,
