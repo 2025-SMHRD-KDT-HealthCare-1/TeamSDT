@@ -3,12 +3,11 @@ const router = express.Router();
 const db = require("../db/database");
 
 /**
- * 1. 권한 최초 등록 OR 수정
+ * 1. 권한 최초 등록 OR 전체 수정
  * POST /permission/agree
  */
 router.post("/agree", async (req, res) => {
-  console.log("✅ permission body:", req.body);
-
+  console.log("permission body:", req.body);
 
   const { user_id, alarm, mic, usage } = req.body;
 
@@ -63,7 +62,7 @@ router.post("/agree", async (req, res) => {
 });
 
 /**
- * 2. 권한 조회 (프론트에서 진입 여부 판단용)
+ * 2. 권한 조회 
  * GET /permission/:user_id
  */
 router.get("/:user_id", async (req, res) => {
@@ -93,6 +92,36 @@ router.get("/:user_id", async (req, res) => {
   } catch (err) {
     console.error("권한 조회 오류:", err);
     res.status(500).json({ message: "서버 오류" });
+  }
+});
+
+/**
+ * 3. 마이페이지 알람 ON/OFF 전용 수정
+ * POST /permission/alarm
+ */
+router.post("/alarm", async (req, res) => {
+  const { user_id, alarm } = req.body;
+
+  try {
+    await db.execute(
+      `
+      UPDATE UserPermissions
+      SET AlarmPermission = ?
+      WHERE UserID = ?
+      `,
+      [alarm, user_id]
+    );
+
+    res.json({
+      success: true,
+      message: "알람 설정 변경 완료"
+    });
+  } catch (err) {
+    console.error("알람 설정 수정 오류:", err);
+    res.status(500).json({
+      success: false,
+      message: "서버 오류"
+    });
   }
 });
 
