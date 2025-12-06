@@ -1,51 +1,66 @@
-// styles/habits.styles.ts
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
+
   screen: {
     flex: 1,
     backgroundColor: "#0A0D1A",
-    paddingTop: 55,
   },
 
+  /** ⭐ 별 배경 */
+  starsContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: -1,
+  },
+
+  /** HEADER */
   header: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#ffffff",
+    backgroundColor: "rgba(62,79,147,0.85)",   // ⭐ 약간 투명하게 변경
+    padding: 24,
+    borderRadius: 20,
+    margin: 20,
+    alignItems: "center",
   },
 
+  headerText: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "600",
+  },
+
+  /** 탭 영역 */
   tabWrapper: {
     paddingHorizontal: 20,
     marginBottom: 10,
   },
+
   tabContainer: {
     flexDirection: "row",
-    backgroundColor: "#151B2E",
-    borderRadius: 14,
-    padding: 5,
+    justifyContent: "space-between",
+    backgroundColor: "rgba(255,255,255,0.05)",  // ⭐ 투명
+    borderRadius: 12,
+    padding: 6,
   },
 
   tabBtn: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 10,
     alignItems: "center",
-  },
-  tabText: {
-    fontSize: 16,
-    color: "#9BA3B0",
-    fontWeight: "500",
+    borderRadius: 10,
   },
 
   tabActive: {
-    backgroundColor: "#334155",
+    backgroundColor: "rgba(110,168,254,0.25)", // ⭐ 하이라이트
   },
+
+  tabText: {
+    fontSize: 16,
+    color: "#b4bfd9",
+  },
+
   tabActiveText: {
-    color: "#ffffff",
+    color: "#7aa2ff",
     fontWeight: "600",
   },
+
 });

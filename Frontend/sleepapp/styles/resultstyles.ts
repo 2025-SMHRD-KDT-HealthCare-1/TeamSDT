@@ -3,133 +3,133 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0E1529",
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    backgroundColor: "transparent",
   },
 
-  // ✅ 탭 (높이 줄여서 터치 안 씹히게)
+  starsContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: -1,
+  },
+
   tabContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    backgroundColor: "#354B85",
-    paddingVertical: 6,   // ✅ 기존 10 → 6
+    justifyContent: "space-between",
+    marginVertical: 20,
   },
+
   tabBtn: {
-    paddingVertical: 4,   // ✅ 기존 6 → 4
-    paddingHorizontal: 16, // ✅ 기존 20 → 16
-    borderRadius: 20,
+    flex: 1,
+    paddingVertical: 10,
+    marginHorizontal: 4,
+    borderRadius: 12,
+    backgroundColor: "rgba(20, 27, 46, 0.6)",
+    borderWidth: 1,
+    borderColor: "rgba(45, 53, 97, 0.4)",
+    alignItems: "center",
   },
-  tabText: {
-    color: "#C7CEFF",
-    fontSize: 15,
-  },
+
   tabSelected: {
-    backgroundColor: "#1E2E5A",
+    backgroundColor: "#3e4f93",
+    borderColor: "#6ea8fe",
   },
+
+  tabText: {
+    color: "#b4bfd9",
+    fontSize: 16,
+  },
+
   tabSelectedText: {
     color: "white",
-    fontWeight: "bold",
+    fontWeight: "600",
   },
 
-  // ✅ 그래프 영역
   graphContainer: {
-    padding: 12,    // ✅ 기존 15 → 12
-    alignItems: "center",
+    marginTop: 10,
+    backgroundColor: "rgba(20, 27, 46, 0.9)",
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(45, 53, 97, 0.4)",
   },
+
   graphTitle: {
-    color: "#C7CEFF",
-    fontSize: 16,
-    marginBottom: 10,
+    color: "white",
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 16,
   },
+
   graphPlaceholder: {
-    color: "#6F7DA3",
-    fontSize: 14,
+    textAlign: "center",
+    color: "#8b95b7",
+    fontSize: 15,
+    paddingVertical: 20,
   },
 
-  // ✅ 막대 그래프 스타일 (간격 + 잘림 전부 해결)
- barChartWrapper: {
-  flexDirection: "row",
-  justifyContent: "space-around",
-  alignItems: "flex-end",
-  height: 180,
-  width: "100%",
-  backgroundColor: "#101B3C",
-  borderRadius: 16,     // ✅ 더 둥글게
-  paddingHorizontal: 8,
-  paddingBottom: 12,
-
-  // ✅ 카드 느낌 핵심
-  shadowColor: "#6EA8FE",
-  shadowOffset: { width: 0, height: 6 },
-  shadowOpacity: 0.25,
-  shadowRadius: 12,
-  elevation: 6,        // ✅ 안드로이드 그림자
-},
-
+  barChartWrapper: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    marginTop: 10,
+  },
 
   barItem: {
     alignItems: "center",
-    flex: 1,
+    width: 40,
   },
 
   bar: {
-    width: 12,            // ✅ 기존 16 → 12
-    backgroundColor: "#6EA8FE", // ✅ 기본 색 (동적 컬러는 TSX에서 적용)
-    borderRadius: 6,
+    width: 22,
+    borderRadius: 10,
   },
 
   barLabel: {
-    color: "#C7CEFF",     // ✅ 요일 기본 색
-    fontSize: 12,
     marginTop: 6,
+    fontSize: 12,
   },
 
   barValue: {
-    color: "white",      // ✅ 시간 기본 색
-    fontSize: 11,
     marginTop: 2,
+    fontSize: 12,
   },
 
-  // ✅ AI 분석 박스
   aiBox: {
-    marginTop: 25,
-    marginHorizontal: 15,
-    backgroundColor: "#4B6BCE",
-    padding: 15,
-    borderRadius: 12,
+    marginTop: 26,
+    backgroundColor: "rgba(20, 27, 46, 0.9)",
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(45, 53, 97, 0.4)",
   },
-  aiTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  aiIcon: {
-    fontSize: 20,
-    marginRight: 6,
-  },
+
   aiTitle: {
-    fontSize: 18,
+    fontSize: 20,
+    fontWeight: "600",
     color: "white",
-    fontWeight: "bold",
+    marginBottom: 14,
   },
+
   aiText: {
-    marginTop: 8,
-    color: "white",
+    color: "#e0e6ff",
     fontSize: 15,
     lineHeight: 22,
   },
 
-  // ✅ 하단
+  /** 하단 푸터 */
   footerSection: {
+    marginVertical: 40,
     alignItems: "center",
-    marginVertical: 30,
   },
+
   emoji: {
-    fontSize: 50,
-    marginBottom: 10,
+    fontSize: 36,
+    marginBottom: 6,
   },
+
   footerText: {
-    color: "#C7CEFF",
+    color: "#8b95b7",
     fontSize: 16,
   },
 });

@@ -9,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import styles from "../../styles/resultstyles";
 import api from "../api/apiconfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import StarsBackground from "../../components/starsbackground";   // ⭐ 추가됨
 
 type TabType = "day" | "week" | "month" | "all";
 
@@ -29,29 +30,29 @@ export default function SleepResult() {
   };
 
   useEffect(() => {
-    if (userId) {
-      fetchResult();
-    }
+    if (userId) fetchResult();
   }, [tab, userId]);
 
   const fetchResult = async () => {
     try {
       setError(null);
-
       const res = await api.get(
         `/result/sleep?period=${tab}&user_id=${userId}`
       );
 
       setGraphData(Array.isArray(res.data.graph) ? res.data.graph : []);
       setAiData(res.data.ai ?? null);
-
     } catch (err) {
       setError("서버 연결 실패");
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#0E1529" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0A0D1A" }}>
+      
+      {/* ⭐ 밤하늘 별 배경 */}
+      <StarsBackground style={styles.starsContainer} />
+
       <ScrollView style={styles.container}>
         
         {/* 탭 */}
@@ -68,7 +69,7 @@ export default function SleepResult() {
               <Text
                 style={[
                   styles.tabText,
-                  tab === key && styles.tabSelectedText,
+                  tab === key && styles.tabSelectedText
                 ]}
               >
                 {{
@@ -103,8 +104,12 @@ export default function SleepResult() {
                 return (
                   <View key={`${item.label}-${idx}`} style={styles.barItem}>
                     <View style={[styles.bar, { height: barHeight, backgroundColor: barColor }]} />
-                    <Text style={[styles.barLabel, { color: barColor }]}>{item.label}</Text>
-                    <Text style={[styles.barValue, { color: barColor }]}>{sleep}h</Text>
+                    <Text style={[styles.barLabel, { color: barColor }]}>
+                      {item.label}
+                    </Text>
+                    <Text style={[styles.barValue, { color: barColor }]}>
+                      {sleep}h
+                    </Text>
                   </View>
                 );
               })}
@@ -115,6 +120,7 @@ export default function SleepResult() {
         {/* AI 분석 */}
         <View style={styles.aiBox}>
           <Text style={styles.aiTitle}>AI 수면 흐름 분석</Text>
+
           <Text style={styles.aiText}>
             {aiData ? (
               <>
@@ -129,6 +135,7 @@ export default function SleepResult() {
           </Text>
         </View>
 
+        {/* 푸터 */}
         <View style={styles.footerSection}>
           <Text style={styles.emoji}>😎🛏️</Text>
           <Text style={styles.footerText}>좋은 수면 습관을 유지하세요!</Text>

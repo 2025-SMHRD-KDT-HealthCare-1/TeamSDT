@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
     position: "absolute",
+    zIndex: -1,          // ⭐⭐ 핵심 (이 한 줄 때문에 별이 보임!)
   },
   star: {
     position: "absolute",
