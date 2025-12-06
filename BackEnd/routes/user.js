@@ -38,6 +38,7 @@ router.post("/join", async (req, res) => {
 });
 
 // ✅ 로그인 (JWT 발급은 유지)
+// ✅ 로그인 (JWT 발급)
 router.post("/login", async (req, res) => {
   const { user_id, password } = req.body;
 
@@ -54,13 +55,15 @@ router.post("/login", async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "비밀번호 틀림" });
 
-    // const token = jwt.sign(
-    //   { user_id: rows[0].user_id },
-    //   process.env.JWT_SECRET,
-    //   { expiresIn: "30d" }
-    // );
+    // 🔥 여기만 추가됨 — .env 없을 때도 기본값 사용
+    const SECRET = process.env.JWT_SECRET || "mysecretkey";
 
-    const token = "token";
+    const token = jwt.sign(
+      { user_id: rows[0].user_id },
+      SECRET,
+      { expiresIn: "30d" }
+    );
+
     return res.json({
       message: "로그인 성공",
       token: token,
@@ -69,6 +72,7 @@ router.post("/login", async (req, res) => {
     return res.status(500).json({ message: "로그인 실패", err });
   }
 });
+
 
 // ✅ 아이디 찾기 (이메일 기반)
 router.post("/find-id", async (req, res) => {
