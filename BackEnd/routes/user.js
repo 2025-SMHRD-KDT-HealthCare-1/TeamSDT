@@ -4,11 +4,13 @@ const db = require("../db/database");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+
 // ✅ 회원가입
 router.post("/join", async (req, res) => {
   const { user_id, password, nick, email, phone } = req.body;
 
   try {
+    // 아이디 중복 체크
     const [idRows] = await db.execute(
       "SELECT user_id FROM users WHERE user_id = ?",
       [user_id]
@@ -17,6 +19,7 @@ router.post("/join", async (req, res) => {
       return res.status(400).json({ message: "이미 존재하는 아이디입니다." });
     }
 
+    // 이메일 중복 체크
     const [emailRows] = await db.execute(
       "SELECT email FROM users WHERE email = ?",
       [email]
@@ -25,6 +28,7 @@ router.post("/join", async (req, res) => {
       return res.status(400).json({ message: "이미 가입된 이메일입니다." });
     }
 
+    // 비밀번호 암호화
     const hashed = await bcrypt.hash(password, 10);
 
     const sql =
@@ -37,7 +41,7 @@ router.post("/join", async (req, res) => {
   }
 });
 
-// ✅ 로그인 (JWT 발급은 유지)
+
 // ✅ 로그인 (JWT 발급)
 router.post("/login", async (req, res) => {
   const { user_id, password } = req.body;
@@ -55,9 +59,9 @@ router.post("/login", async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "비밀번호 틀림" });
 
-    // 🔥 여기만 추가됨 — .env 없을 때도 기본값 사용
     const SECRET = process.env.JWT_SECRET || "mysecretkey";
 
+    // JWT 발급
     const token = jwt.sign(
       { user_id: rows[0].user_id },
       SECRET,
@@ -67,6 +71,7 @@ router.post("/login", async (req, res) => {
     return res.json({
       message: "로그인 성공",
       token: token,
+      user_id: rows[0].user_id, // 프론트 저장용
     });
   } catch (err) {
     return res.status(500).json({ message: "로그인 실패", err });
@@ -74,7 +79,7 @@ router.post("/login", async (req, res) => {
 });
 
 
-// ✅ 아이디 찾기 (이메일 기반)
+// ✅ 아이디 찾기 (이메일로 user_id 조회)
 router.post("/find-id", async (req, res) => {
   const { email } = req.body;
 
@@ -100,12 +105,17 @@ router.post("/find-id", async (req, res) => {
   }
 });
 
-// ✅ 임시 비밀번호 생성 함수
+
+// ============================
+//     비밀번호 재설정
+// ============================
+
+// 🔹 임시 비밀번호 생성 함수
 function generateTempPassword() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-// ✅ 비밀번호 재설정
+// 🔹 비밀번호 재설정 API
 router.post("/reset-password", async (req, res) => {
   const { user_id, email } = req.body;
 
@@ -139,7 +149,11 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// ✅ 아이디 중복 확인
+
+// ============================
+//     아이디 중복 확인
+// ============================
+
 router.get("/check-id", async (req, res) => {
   const { user_id } = req.query;
 
@@ -149,17 +163,17 @@ router.get("/check-id", async (req, res) => {
       [user_id]
     );
 
-    if (rows.length > 0) {
-      return res.json({ exists: true });
-    } else {
-      return res.json({ exists: false });
-    }
+    return res.json({ exists: rows.length > 0 });
   } catch (err) {
     return res.status(500).json({ message: "DB 오류", err });
   }
 });
 
-// 회원 정보 조회 (홈 / 마이페이지 공용) - users 테이블 기준 최종본
+
+// ============================
+//   프로필 조회 (user_id)
+// ============================
+
 router.get("/profile/:user_id", async (req, res) => {
   const { user_id } = req.params;
 
@@ -178,15 +192,7 @@ router.get("/profile/:user_id", async (req, res) => {
     }
 
     return res.json(rows[0]);
-    // 반환 예시:
-    // {
-    //   user_id: "test01",
-    //   nick: "민찬",
-    //   email: "test@test.com",
-    //   phone: "01012345678"
-    // }
   } catch (err) {
-    console.error(err);
     return res.status(500).json({
       message: "회원 정보 조회 실패",
       error: err,
@@ -194,5 +200,76 @@ router.get("/profile/:user_id", async (req, res) => {
   }
 });
 
+
+// ============================
+//     내 정보 (JWT 기반)
+// ============================
+
+router.get("/me", async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    if (!auth) {
+      return res.status(401).json({ message: "토큰 없음" });
+    }
+
+    const token = auth.replace("Bearer ", "");
+    const SECRET = process.env.JWT_SECRET || "mysecretkey";
+
+    const decoded = jwt.verify(token, SECRET);
+    const userId = decoded.user_id;
+
+    const [rows] = await db.execute(
+      "SELECT user_id, nick, email, phone FROM users WHERE user_id = ? AND is_deleted = 0",
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "회원 정보 없음" });
+    }
+
+    return res.json(rows[0]);
+  } catch (err) {
+    return res.status(500).json({ message: "내 정보 조회 실패", error: err });
+  }
+});
+
+
+// ============================
+//         회원탈퇴
+// ============================
+
+router.delete("/delete/:user_id", async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    // 유저 존재 여부 확인
+    const [rows] = await db.execute(
+      "SELECT * FROM users WHERE user_id = ? AND is_deleted = 0",
+      [user_id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({
+        message: "이미 탈퇴했거나 존재하지 않는 회원입니다.",
+      });
+    }
+
+    // 탈퇴 처리
+    await db.execute(
+      "UPDATE users SET is_deleted = 1 WHERE user_id = ?",
+      [user_id]
+    );
+
+    return res.json({ message: "회원탈퇴 완료" });
+  } catch (err) {
+    return res.status(500).json({
+      message: "회원탈퇴 실패",
+      error: err,
+    });
+  }
+});
+
+
+// ============================
 
 module.exports = router;

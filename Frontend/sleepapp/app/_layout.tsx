@@ -4,7 +4,7 @@ export default function IntroLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
-      <Stack.Screen name="./intro/step2" />
+      <Stack.Screen name="/intro/step2" />
     </Stack>
   );
 }

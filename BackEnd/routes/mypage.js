@@ -90,21 +90,4 @@ router.delete("/data/:id", async (req, res) => {
   }
 });
 
-
-router.delete("/user/delete/:id", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    await db.execute("DELETE FROM caffeine_logs WHERE user_id = ?", [id]);
-    await db.execute("DELETE FROM screentime_logs WHERE user_id = ?", [id]);
-    await db.execute("DELETE FROM sleep_logs WHERE user_id = ?", [id]);
-    await db.execute("DELETE FROM users WHERE user_id = ?", [id]);
-
-    res.json({ message: "회원탈퇴 완료" });
-
-  } catch (err) {
-    res.status(500).json({ message: "서버 오류", err });
-  }
-});
-
 module.exports = router;
