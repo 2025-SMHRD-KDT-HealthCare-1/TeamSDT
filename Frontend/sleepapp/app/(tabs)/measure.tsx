@@ -8,7 +8,6 @@ export default function SleepSettingsPage() {
   const [bedtime, setBedtime] = useState("23:00");
   const [wakeTime, setWakeTime] = useState("07:00");
 
-  // 👉 수면 시간 계산
   const calcSleepHours = () => {
     const [bh, bm] = bedtime.split(":").map(Number);
     const [wh, wm] = wakeTime.split(":").map(Number);
@@ -17,7 +16,7 @@ export default function SleepSettingsPage() {
     let wakeTotal = wh * 60 + wm;
 
     if (wakeTotal < bedTotal) {
-      wakeTotal += 24 * 60; // 다음날로 넘어감
+      wakeTotal += 24 * 60;
     }
 
     const diff = wakeTotal - bedTotal;
@@ -27,7 +26,6 @@ export default function SleepSettingsPage() {
     return `${h}시간 ${m}분`;
   };
 
-  // 👉 "수면 측정 시작" 눌렀을 때 타이머 페이지로 이동
   const handleSave = () => {
     router.push({
       pathname: "../measure/sleeptimer",
@@ -38,7 +36,6 @@ export default function SleepSettingsPage() {
   return (
     <ScrollView style={styles.container}>
 
-      {/* ⭐ 별 배경 */}
       <View style={styles.starsContainer}>
         {Array.from({ length: 80 }).map((_, i) => {
           const size = Math.random() * 3 + 1;
@@ -61,14 +58,12 @@ export default function SleepSettingsPage() {
         })}
       </View>
 
-      {/* 제목 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>수면 측정 설정</Text>
       </View>
 
       <View style={styles.innerContainer}>
 
-        {/* 취침시간 */}
         <View style={styles.card}>
           <Text style={styles.label}>취침시간</Text>
           <Text style={styles.subLabel}>Bedtime</Text>
@@ -86,7 +81,6 @@ export default function SleepSettingsPage() {
           <Text style={styles.bottomText}>규칙적인 취침이 건강에 좋아요</Text>
         </View>
 
-        {/* 예상 수면 시간 */}
         <View style={styles.sleepPreview}>
           <View style={styles.line} />
           <View style={styles.sleepCenter}>
@@ -96,7 +90,6 @@ export default function SleepSettingsPage() {
           <View style={styles.line} />
         </View>
 
-        {/* 기상시간 */}
         <View style={styles.card}>
           <Text style={styles.label}>기상시간</Text>
           <Text style={styles.subLabel}>Wake-up Time</Text>
@@ -114,7 +107,6 @@ export default function SleepSettingsPage() {
           <Text style={styles.bottomText}>일정한 기상은 생체리듬을 만듭니다</Text>
         </View>
 
-        {/* 저장 버튼 */}
         <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
           <Text style={styles.saveBtnText}>수면 측정 시작</Text>
         </TouchableOpacity>

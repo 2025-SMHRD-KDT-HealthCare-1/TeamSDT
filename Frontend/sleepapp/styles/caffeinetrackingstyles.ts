@@ -1,20 +1,17 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-  /** 전체 배경 */
   container: {
     flex: 1,
     padding: 16,
     backgroundColor: "#0a0d1a",
   },
 
-  /** ⭐ 별 배경 */
   starsContainer: {
     ...StyleSheet.absoluteFillObject,
     zIndex: -1,
   },
 
-  /** 공통 카드 */
   card: {
     backgroundColor: "rgba(20, 27, 46, 0.9)",
     borderRadius: 20,
@@ -24,7 +21,6 @@ export default StyleSheet.create({
     marginBottom: 26,
   },
 
-  /** 카드 상단 헤더 */
   cardHeaderRow: {
     flexDirection: "row",
     alignItems: "center",

@@ -14,17 +14,14 @@ export default function Habits() {
   return (
     <View style={styles.screen}>
 
-      {/* ⭐ 밤하늘 별 배경 */}
       <StarsBackground style={styles.starsContainer} />
 
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
 
-        {/* HEADER */}
         <View style={styles.header}>
           <Text style={styles.headerText}>생활습관 기록</Text>
         </View>
 
-        {/* 탭 */}
         <View style={styles.tabWrapper}>
           <View style={styles.tabContainer}>
             <TouchableOpacity
@@ -63,7 +60,6 @@ export default function Habits() {
           </View>
         </View>
 
-        {/* 콘텐츠 (기능 변경 없음) */}
         {activeTab === "caffeine" ? (
           <CaffeineTracking />
         ) : (

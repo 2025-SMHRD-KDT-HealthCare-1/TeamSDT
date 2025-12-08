@@ -5,12 +5,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 
-// ✅ 회원가입
 router.post("/join", async (req, res) => {
   const { user_id, password, nick, email, phone } = req.body;
 
   try {
-    // 아이디 중복 체크
     const [idRows] = await db.execute(
       "SELECT user_id FROM users WHERE user_id = ?",
       [user_id]
@@ -19,7 +17,6 @@ router.post("/join", async (req, res) => {
       return res.status(400).json({ message: "이미 존재하는 아이디입니다." });
     }
 
-    // 이메일 중복 체크
     const [emailRows] = await db.execute(
       "SELECT email FROM users WHERE email = ?",
       [email]
@@ -28,7 +25,6 @@ router.post("/join", async (req, res) => {
       return res.status(400).json({ message: "이미 가입된 이메일입니다." });
     }
 
-    // 비밀번호 암호화
     const hashed = await bcrypt.hash(password, 10);
 
     const sql =
@@ -42,7 +38,6 @@ router.post("/join", async (req, res) => {
 });
 
 
-// ✅ 로그인 (JWT 발급)
 router.post("/login", async (req, res) => {
   const { user_id, password } = req.body;
 
@@ -71,7 +66,7 @@ router.post("/login", async (req, res) => {
     return res.json({
       message: "로그인 성공",
       token: token,
-      user_id: rows[0].user_id, // 프론트 저장용
+      user_id: rows[0].user_id,
     });
   } catch (err) {
     return res.status(500).json({ message: "로그인 실패", err });
@@ -79,7 +74,6 @@ router.post("/login", async (req, res) => {
 });
 
 
-// ✅ 아이디 찾기 (이메일로 user_id 조회)
 router.post("/find-id", async (req, res) => {
   const { email } = req.body;
 
@@ -106,16 +100,11 @@ router.post("/find-id", async (req, res) => {
 });
 
 
-// ============================
-//     비밀번호 재설정
-// ============================
 
-// 🔹 임시 비밀번호 생성 함수
 function generateTempPassword() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-// 🔹 비밀번호 재설정 API
 router.post("/reset-password", async (req, res) => {
   const { user_id, email } = req.body;
 
@@ -150,9 +139,6 @@ router.post("/reset-password", async (req, res) => {
 });
 
 
-// ============================
-//     아이디 중복 확인
-// ============================
 
 router.get("/check-id", async (req, res) => {
   const { user_id } = req.query;
@@ -170,9 +156,6 @@ router.get("/check-id", async (req, res) => {
 });
 
 
-// ============================
-//   프로필 조회 (user_id)
-// ============================
 
 router.get("/profile/:user_id", async (req, res) => {
   const { user_id } = req.params;
@@ -201,9 +184,6 @@ router.get("/profile/:user_id", async (req, res) => {
 });
 
 
-// ============================
-//     내 정보 (JWT 기반)
-// ============================
 
 router.get("/me", async (req, res) => {
   try {
@@ -234,15 +214,11 @@ router.get("/me", async (req, res) => {
 });
 
 
-// ============================
-//         회원탈퇴
-// ============================
 
 router.delete("/delete/:user_id", async (req, res) => {
   const { user_id } = req.params;
 
   try {
-    // 유저 존재 여부 확인
     const [rows] = await db.execute(
       "SELECT * FROM users WHERE user_id = ? AND is_deleted = 0",
       [user_id]
@@ -254,7 +230,6 @@ router.delete("/delete/:user_id", async (req, res) => {
       });
     }
 
-    // 탈퇴 처리
     await db.execute(
       "UPDATE users SET is_deleted = 1 WHERE user_id = ?",
       [user_id]
@@ -270,6 +245,5 @@ router.delete("/delete/:user_id", async (req, res) => {
 });
 
 
-// ============================
 
 module.exports = router;

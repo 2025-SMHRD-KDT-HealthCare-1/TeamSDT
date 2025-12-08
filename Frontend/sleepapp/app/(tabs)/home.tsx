@@ -179,7 +179,7 @@ export default function HomeScreen() {
         </View>
 
         {/* AI 텍스트 출력 */}
-        <View style={[styles.card, { marginTop: 20 }]}>
+         <View style={[styles.card, { marginTop: 20 }]}>
           <Text style={styles.cardTitle}>AI 수면 분석</Text>
 
           {aiLoading ? (
