@@ -49,17 +49,19 @@ export default function HomeScreen() {
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
-  async function playBase64Audio(base64Audio) {
-    const fileUri = FileSystem.cacheDirectory + "ai_tts.mp3";
+  async function playBase64Audio(base64Audio: string) {
+  const fileUri =
+  (FileSystem as any).documentDirectory + "ai_tts.mp3";
 
-    await FileSystem.writeAsStringAsync(fileUri, base64Audio, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+await FileSystem.writeAsStringAsync(fileUri, base64Audio, {
+  encoding: "base64",
+});
 
-    const sound = new Audio.Sound();
-    await sound.loadAsync({ uri: fileUri });
-    await sound.playAsync();
-  }
+  const sound = new Audio.Sound();
+  await sound.loadAsync({ uri: fileUri });
+  await sound.playAsync();
+}
+
 
   const loadAiFeedback = async () => {
     setAiLoading(true);
