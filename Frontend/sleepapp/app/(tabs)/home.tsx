@@ -4,12 +4,16 @@ import api from "../api/apiconfig";
 import { Moon, Clock, Smartphone, Coffee } from "lucide-react-native";
 import styles from "../../styles/homestyles";
 import StarsBackground from "../../components/starsbackground";
+import { Audio } from "expo-av";
+import * as FileSystem from "expo-file-system";
 
 export default function HomeScreen() {
   const [nick, setNick] = useState("");
   const [loading, setLoading] = useState(true);
 
+
   const sleepData = {
+    user_name : { name : "홍길동"},
     totalSleep: { hours: 7, minutes: 30 },
     sleepTime: { hours: 23, minutes: 20 },
     wakeTime: { hours: 6, minutes: 50 },
@@ -40,6 +44,55 @@ export default function HomeScreen() {
       </View>
     );
   }
+
+  //AI
+  const [aiText, setAiText] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+
+  async function playBase64Audio(base64Audio) {
+    const fileUri = FileSystem.cacheDirectory + "ai_tts.mp3";
+
+    await FileSystem.writeAsStringAsync(fileUri, base64Audio, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    const sound = new Audio.Sound();
+    await sound.loadAsync({ uri: fileUri });
+    await sound.playAsync();
+  }
+
+  const loadAiFeedback = async () => {
+    setAiLoading(true);
+    try {
+      const res = await fetch("https://christal-nonsignificative-noneternally.ngrok-free.dev/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_name: nick,
+          caffeine: sleepData.caffeine.mg,
+          screen_time: sleepData.screenTime.hours + sleepData.screenTime.minutes / 60,
+          sleep_time: sleepData.totalSleep.hours + sleepData.totalSleep.minutes / 60,
+          style: "친근하게"
+        }),
+      });
+
+      const data = await res.json();
+
+      setAiText(data.text);          // 텍스트 화면 표시
+      playBase64Audio(data.audio_base64); // 음성 자동 재생
+    } catch (err) {
+      console.log("AI 오류:", err);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!loading) {
+      loadAiFeedback();
+    }
+  }, [loading]);
+
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0A0D1A" }}>
@@ -108,6 +161,20 @@ export default function HomeScreen() {
               {sleepData.caffeine.type} / {sleepData.caffeine.cups}잔 / {sleepData.caffeine.mg}mg
             </Text>
           </View>
+          
+        </View>
+
+        {/* AI 텍스트 출력 */}
+        <View style={[styles.card, { marginTop: 20 }]}>
+          <Text style={styles.cardTitle}>AI 수면 분석</Text>
+
+          {aiLoading ? (
+            <Text style={{ color: "#888", marginTop: 10 }}>AI 분석 중...</Text>
+          ) : (
+            <Text style={{ color: "white", marginTop: 10, lineHeight: 22 }}>
+              {aiText}
+            </Text>
+          )}
         </View>
 
         <View style={styles.bottomSection}>
