@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const fetch = require("node-fetch");
 
 // 통합 분석 API
 router.post("/", async (req, res) => {
