@@ -46,54 +46,54 @@ export default function HomeScreen() {
   }
 
   //AI
-  const [aiText, setAiText] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
+//   const [aiText, setAiText] = useState("");
+//   const [aiLoading, setAiLoading] = useState(false);
 
-  async function playBase64Audio(base64Audio: string) {
-  const fileUri =
-  (FileSystem as any).documentDirectory + "ai_tts.mp3";
+//   async function playBase64Audio(base64Audio: string) {
+//   const fileUri =
+//   (FileSystem as any).documentDirectory + "ai_tts.mp3";
 
-await FileSystem.writeAsStringAsync(fileUri, base64Audio, {
-  encoding: "base64",
-});
+// await FileSystem.writeAsStringAsync(fileUri, base64Audio, {
+//   encoding: "base64",
+// });
 
-  const sound = new Audio.Sound();
-  await sound.loadAsync({ uri: fileUri });
-  await sound.playAsync();
-}
+//   const sound = new Audio.Sound();
+//   await sound.loadAsync({ uri: fileUri });
+//   await sound.playAsync();
+// }
 
 
-  const loadAiFeedback = async () => {
-    setAiLoading(true);
-    try {
-      const res = await fetch("https://christal-nonsignificative-noneternally.ngrok-free.dev/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_name: nick,
-          caffeine: sleepData.caffeine.mg,
-          screen_time: sleepData.screenTime.hours + sleepData.screenTime.minutes / 60,
-          sleep_time: sleepData.totalSleep.hours + sleepData.totalSleep.minutes / 60,
-          style: "친근하게"
-        }),
-      });
+//   const loadAiFeedback = async () => {
+//     setAiLoading(true);
+//     try {
+//       const res = await fetch("https://christal-nonsignificative-noneternally.ngrok-free.dev/ai", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           user_name: nick,
+//           caffeine: sleepData.caffeine.mg,
+//           screen_time: sleepData.screenTime.hours + sleepData.screenTime.minutes / 60,
+//           sleep_time: sleepData.totalSleep.hours + sleepData.totalSleep.minutes / 60,
+//           style: "친근하게"
+//         }),
+//       });
 
-      const data = await res.json();
+//       const data = await res.json();
 
-      setAiText(data.text);          // 텍스트 화면 표시
-      playBase64Audio(data.audio_base64); // 음성 자동 재생
-    } catch (err) {
-      console.log("AI 오류:", err);
-    } finally {
-      setAiLoading(false);
-    }
-  };
+//       setAiText(data.text);          // 텍스트 화면 표시
+//       playBase64Audio(data.audio_base64); // 음성 자동 재생
+//     } catch (err) {
+//       console.log("AI 오류:", err);
+//     } finally {
+//       setAiLoading(false);
+//     }
+//   };
 
-  useEffect(() => {
-    if (!loading) {
-      loadAiFeedback();
-    }
-  }, [loading]);
+//   useEffect(() => {
+//     if (!loading) {
+//       loadAiFeedback();
+//     }
+//   }, [loading]);
 
 
   return (
@@ -164,7 +164,7 @@ await FileSystem.writeAsStringAsync(fileUri, base64Audio, {
         </View>
 
         {/* AI 텍스트 출력 */}
-        <View style={[styles.card, { marginTop: 20 }]}>
+        {/* <View style={[styles.card, { marginTop: 20 }]}>
           <Text style={styles.cardTitle}>AI 수면 분석</Text>
 
           {aiLoading ? (
@@ -179,7 +179,7 @@ await FileSystem.writeAsStringAsync(fileUri, base64Audio, {
         <View style={styles.bottomSection}>
           <Text style={styles.bottomEmoji}>😴</Text>
           <Text style={styles.bottomText}>좋은 밤 되세요!</Text>
-        </View>
+        </View> */}
 
       </ScrollView>
     </View>
