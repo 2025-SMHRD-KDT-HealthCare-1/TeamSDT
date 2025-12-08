@@ -32,6 +32,9 @@ export default function MyPage({ userName }: MyPageProps) {
   const [dailyData, setDailyData] = useState<any>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  /** ⭐ 로그아웃 모달 상태 추가 */
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   const [nick, setNick] = useState<string>(userName);
   const [user, setUser] = useState<any>(null);
 
@@ -193,7 +196,12 @@ export default function MyPage({ userName }: MyPageProps) {
         </View>
 
         <View style={styles.card}>
-          <TouchableOpacity onPress={logout} style={styles.rowButtonBorder}>
+
+          {/* ⭐ 로그아웃 모달 열기 버튼 ⭐ */}
+          <TouchableOpacity
+            onPress={() => setShowLogoutModal(true)}
+            style={styles.rowButtonBorder}
+          >
             <View style={styles.rowLeft}>
               <LogOut size={26} color="#5b6fb9" />
               <Text style={styles.rowText}>로그아웃</Text>
@@ -217,6 +225,31 @@ export default function MyPage({ userName }: MyPageProps) {
           <Text style={styles.bottomText}>좋은 수면 습관을 유지하세요 ✨</Text>
         </View>
       </View>
+
+      <Modal visible={showLogoutModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>로그아웃</Text>
+            <Text style={styles.modalDesc}>정말 로그아웃 하시겠습니까?</Text>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => setShowLogoutModal(false)}
+              >
+                <Text style={styles.cancelBtnText}>취소</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.deleteBtn}
+                onPress={logout}
+              >
+                <Text style={styles.deleteBtnLabel}>로그아웃</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal visible={showDeleteModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>

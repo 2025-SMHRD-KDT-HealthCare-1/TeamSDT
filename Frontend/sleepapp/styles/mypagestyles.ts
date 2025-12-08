@@ -8,7 +8,9 @@ export default StyleSheet.create({
 
   starsContainer: {
     ...StyleSheet.absoluteFillObject,
+    position: "absolute",
     zIndex: -1,
+    pointerEvents: "none",
   },
 
   star: {
