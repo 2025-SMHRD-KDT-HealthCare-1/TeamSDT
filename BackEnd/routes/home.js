@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db/database");
 
-// 홈 대시보드 데이터 조회
 router.get("/dashboard/:userId", async (req, res) => {
   const { userId } = req.params;
 
@@ -26,37 +25,21 @@ router.get("/dashboard/:userId", async (req, res) => {
       totalSleep.hours = Math.floor(totalMin / 60);
       totalSleep.minutes = totalMin % 60;
 
-      const start = new Date(sleepRow.SleepStart);
-      const end = new Date(sleepRow.SleepEnd);
+      sleepTime.hours = parseInt(sleepRow.SleepStart?.slice(0, 2)) || 0;
+      sleepTime.minutes = parseInt(sleepRow.SleepStart?.slice(3, 5)) || 0;
 
-      sleepTime.hours = start.getHours();
-      sleepTime.minutes = start.getMinutes();
-
-      wakeTime.hours = end.getHours();
-      wakeTime.minutes = end.getMinutes();
+      wakeTime.hours = parseInt(sleepRow.SleepEnd?.slice(0, 2)) || 0;
+      wakeTime.minutes = parseInt(sleepRow.SleepEnd?.slice(3, 5)) || 0;
     }
 
-    // 2) 오늘 스마트폰 사용 시간
-    const [[screenRow]] = await db.execute(
-      `SELECT SUM(UsageMinutes) AS total 
-       FROM ScreenTime 
-       WHERE UserID = ? 
-       AND DATE(UsedAt) = CURDATE()`,
-      [userId]
-    );
+    // ✅ 2) 오늘 스마트폰 사용 시간 (임시 안전 처리)
+    const screenTime = { hours: 0, minutes: 0 };
 
-    const totalScreenMin = screenRow?.total || 0;
-    const screenTime = {
-      hours: Math.floor(totalScreenMin / 60),
-      minutes: totalScreenMin % 60
-    };
-
-    // 3) 오늘 카페인 섭취량
+    // ✅ 3) 오늘 카페인 섭취량 (DATE 제거)
     const [caffeineRows] = await db.execute(
       `SELECT DrinkType, COUNT(*) AS cups, SUM(Caffeine_Amount) AS totalMg
        FROM CaffeineLog
        WHERE UserID = ?
-       AND DATE(IntakeTime) = CURDATE()
        GROUP BY DrinkType
        ORDER BY totalMg DESC`,
       [userId]
@@ -70,7 +53,6 @@ router.get("/dashboard/:userId", async (req, res) => {
       caffeine.mg = caffeineRows.reduce((s, r) => s + r.totalMg, 0);
     }
 
-    // 최종 응답
     res.json({
       totalSleep,
       sleepTime,
