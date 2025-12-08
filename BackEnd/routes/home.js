@@ -6,11 +6,13 @@ router.get("/dashboard/:userId", async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // 1) 오늘 수면 데이터
+    // ✅ 1) 어제 수면 데이터
     const [[sleepRow]] = await db.execute(
       `SELECT SleepStart, SleepEnd, TotalSleepTime 
        FROM SleepRecord 
-       WHERE UserID = ? 
+       WHERE UserID = ?
+         AND DateValue = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+         AND SleepEnd IS NOT NULL
        ORDER BY DateValue DESC 
        LIMIT 1`,
       [userId]
@@ -32,10 +34,10 @@ router.get("/dashboard/:userId", async (req, res) => {
       wakeTime.minutes = parseInt(sleepRow.SleepEnd?.slice(3, 5)) || 0;
     }
 
-    // ✅ 2) 오늘 스마트폰 사용 시간 (임시 안전 처리)
+    // ✅ 2) 오늘 스마트폰 사용 시간 (임시)
     const screenTime = { hours: 0, minutes: 0 };
 
-    // ✅ 3) 오늘 카페인 섭취량 (DATE 제거)
+    // ✅ 3) 오늘 카페인 섭취량
     const [caffeineRows] = await db.execute(
       `SELECT DrinkType, COUNT(*) AS cups, SUM(Caffeine_Amount) AS totalMg
        FROM CaffeineLog

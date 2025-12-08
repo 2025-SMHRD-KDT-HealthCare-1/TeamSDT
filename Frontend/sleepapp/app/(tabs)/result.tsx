@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import styles from "../../styles/resultstyles";
 import api from "../api/apiconfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import StarsBackground from "../../components/starsbackground";   // ⭐ 추가됨
+import StarsBackground from "../../components/starsbackground";
 
 type TabType = "day" | "week" | "month" | "all";
 
@@ -33,15 +33,24 @@ export default function SleepResult() {
     if (userId) fetchResult();
   }, [tab, userId]);
 
+  // ✅ ✅ ✅ 여기만 실데이터 연동으로 교체됨
   const fetchResult = async () => {
     try {
       setError(null);
+
+      // ✅ 실제 수면 기록 기반 API
       const res = await api.get(
-        `/result/sleep?period=${tab}&user_id=${userId}`
+        `/sleep/history/${userId}?period=${tab}`
       );
 
-      setGraphData(Array.isArray(res.data.graph) ? res.data.graph : []);
+      // ✅ 그래프 데이터만 연결
+      setGraphData(
+        Array.isArray(res.data.graph) ? res.data.graph : []
+      );
+
+      // ✅ AI는 아직 유지 (없으면 null)
       setAiData(res.data.ai ?? null);
+
     } catch (err) {
       setError("서버 연결 실패");
     }

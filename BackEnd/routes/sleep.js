@@ -246,4 +246,54 @@ router.post("/screen-event", async (req, res) => {
   }
 });
 
+/**
+ * ✅ ✅ ✅ 5️⃣ Result 그래프용 수면 히스토리 API
+ * GET /sleep/history/:userId?period=day|week|month|all
+ */
+router.get("/history/:userId", async (req, res) => {
+  const { userId } = req.params;
+  const { period } = req.query;
+
+  try {
+    let dateCondition = "";
+
+    if (period === "day") {
+      dateCondition = "AND DateValue = CURDATE()";
+    } else if (period === "week") {
+      dateCondition = "AND DateValue >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+    } else if (period === "month") {
+      dateCondition = "AND DateValue >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+    }
+    // ✅ all 은 조건 없음
+
+    const [rows] = await db.execute(
+      `
+      SELECT 
+        DateValue,
+        TotalSleepTime
+      FROM SleepRecord
+      WHERE UserID = ?
+      ${dateCondition}
+      AND TotalSleepTime > 0
+      ORDER BY DateValue ASC
+      `,
+      [userId]
+    );
+
+    // ✅ 프론트 그래프용 데이터 가공
+    const graph = rows.map((row) => ({
+      label: `${row.DateValue.getMonth() + 1}/${row.DateValue.getDate()}`,
+      sleep: Number((row.TotalSleepTime / 60).toFixed(1)), // 분 → 시간
+    }));
+
+    res.json({
+      graph,
+      ai: null, // ✅ 나중에 AI 연결용 자리 유지
+    });
+  } catch (err) {
+    console.error("sleep history error:", err);
+    res.status(500).json({ message: "수면 히스토리 조회 실패" });
+  }
+});
+
 module.exports = router;
