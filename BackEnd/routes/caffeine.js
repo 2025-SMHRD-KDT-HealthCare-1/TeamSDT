@@ -55,36 +55,31 @@ router.get("/menus", async (req, res) => {
     );
 
     const menus = rows.map((row) => {
-  const original = row.menu;
+      const original = row.menu;
 
-  let label = original;
+      let label = original;
 
-  label = label.replace(/^(커피_|스무디_커피_|스무디_)/, "");
+      label = label.replace(/^(커피_|스무디_커피_|스무디_)/, "");
+      label = label.replace(/^카페\s*/, "");
+      label = label.replace(/\s*\((Short|Tall|Grande|Venti \(Iced\)|Venti \(Hot\)|Trenta)\)\s*$/, "");
+      label = label.replace(/\(ICED\)/gi, "ICED").replace(/\(HOT\)/gi, "HOT");
+      label = label.replace(/아이스/gi, "").replace(/핫/gi, "");
 
-  label = label.replace(/^카페\s*/, "");
+      if (/^모카/i.test(label)) {
+        label = "카페" + label;
+      }
+      if (/^라떼/i.test(label)) {
+        label = "카페" + label;
+      }
 
-  label = label.replace(/\s*\((Short|Tall|Grande|Venti \(Iced\)|Venti \(Hot\)|Trenta)\)\s*$/, "");
+      label = label.replace(/ICEDICED/gi, "ICED").replace(/HOTHOT/gi, "HOT");
+      label = label.replace(/\s+/g, " ").trim();
 
-  label = label.replace(/\(ICED\)/gi, "ICED").replace(/\(HOT\)/gi, "HOT");
-
-  label = label.replace(/아이스/gi, "").replace(/핫/gi, "");
-
-  if (/^모카/i.test(label)) {
-    label = "카페" + label;
-  }
-  if (/^라떼/i.test(label)) {
-    label = "카페" + label;
-  }
-
-  label = label.replace(/ICEDICED/gi, "ICED").replace(/HOTHOT/gi, "HOT");
-  label = label.replace(/\s+/g, " ").trim();
-
-  return {
-    label,
-    menu_key: original
-  };
-});
-
+      return {
+        label,
+        menu_key: original
+      };
+    });
 
     res.json({ menus });
   } catch (err) {
@@ -128,7 +123,6 @@ router.get("/sizes", async (req, res) => {
   }
 });
 
-
 router.post("/calc", async (req, res) => {
   const { items } = req.body;
   if (!items) return res.status(400).json({ message: "items 필요" });
@@ -170,6 +164,31 @@ router.post("/calc", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "카페인 계산 중 오류 발생" });
+  }
+});
+
+
+
+// 카페인 섭취 시간 + 기록 저장 API (기능 추가)
+router.post("/log", async (req, res) => {
+  const { userId, drink, size, caffeine, intakeTime } = req.body;
+
+  if (!userId || !drink || !size || !caffeine || !intakeTime) {
+    return res.status(400).json({ message: "필수 값 누락" });
+  }
+
+  try {
+    await db.execute(
+      `INSERT INTO CaffeineLog 
+       (UserID, DrinkType, DrinkSize, Caffeine_Amount, IntakeTime)
+       VALUES (?, ?, ?, ?, ?)`,
+      [userId, drink, size, caffeine, intakeTime]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("POST /caffeine/log error:", err);
+    res.status(500).json({ message: "카페인 기록 저장 중 오류 발생" });
   }
 });
 
