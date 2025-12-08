@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db/database");
+const { v4: uuidv4 } = require("uuid");
 
 function convertStarbucksSize(volume) {
   const num = parseInt(volume.replace(/[^0-9]/g, ""));
@@ -169,7 +170,6 @@ router.post("/calc", async (req, res) => {
 
 
 
-// 카페인 섭취 시간 + 기록 저장 API (기능 추가)
 router.post("/log", async (req, res) => {
   const { userId, drink, size, caffeine, intakeTime } = req.body;
 
@@ -178,11 +178,13 @@ router.post("/log", async (req, res) => {
   }
 
   try {
+    const caffeineId = uuidv4(); // ✅ PK 생성
+
     await db.execute(
       `INSERT INTO CaffeineLog 
-       (UserID, DrinkType, DrinkSize, Caffeine_Amount, IntakeTime)
-       VALUES (?, ?, ?, ?, ?)`,
-      [userId, drink, size, caffeine, intakeTime]
+       (Caffeine_ID, UserID, DrinkType, DrinkSize, Caffeine_Amount, IntakeTime)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [caffeineId, userId, drink, size, caffeine, intakeTime]
     );
 
     res.json({ success: true });
@@ -191,5 +193,6 @@ router.post("/log", async (req, res) => {
     res.status(500).json({ message: "카페인 기록 저장 중 오류 발생" });
   }
 });
+
 
 module.exports = router;

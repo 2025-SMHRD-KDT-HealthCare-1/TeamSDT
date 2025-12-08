@@ -97,12 +97,10 @@ export default function HomeScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#0A0D1A" }}>
 
-      {/* ⭐ 별 배경 */}
       <StarsBackground style={styles.starsContainer} />
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         
-        {/* ⭐ HEADER (기능 변경 없이 스타일만 수정됨) */}
         <View style={[styles.header, { backgroundColor: "rgba(62,79,147,0.85)" }]}>
           <View>
             <Text style={styles.headerWelcome}>환영합니다</Text>
@@ -114,7 +112,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 수면 카드 */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>오늘의 수면 리포트</Text>
 
