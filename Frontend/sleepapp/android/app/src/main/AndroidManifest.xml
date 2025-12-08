@@ -1,13 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-  <!-- ⭐ 스크린타임 조회 권한 -->
   <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
   <uses-permission
       android:name="android.permission.PACKAGE_USAGE_STATS"
       tools:ignore="ProtectedPermissions" />
 
-  <!-- ⭐ 앱 목록 조회 권한 (Usage Access 목록에 표시되려면 필수!) -->
   <uses-permission 
       android:name="android.permission.QUERY_ALL_PACKAGES"
       tools:ignore="QueryAllPackagesPermission" />

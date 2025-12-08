@@ -17,7 +17,7 @@ type CaffeineRecord = {
   drink: string;
   size: string;
   caffeine: number;
-  time: string; // 사용자가 입력
+  time: string;
 };
 
 function getNowTimeString() {
@@ -25,6 +25,17 @@ function getNowTimeString() {
   const hh = now.getHours().toString().padStart(2, "0");
   const mm = now.getMinutes().toString().padStart(2, "0");
   return `${hh}:${mm}`;
+}
+
+function formatTimeInput(text: string) {
+  const numbers = text.replace(/[^0-9]/g, "");
+  let formatted = numbers.slice(0, 4);
+
+  if (formatted.length >= 3) {
+    formatted = formatted.slice(0, 2) + ":" + formatted.slice(2);
+  }
+
+  return formatted;
 }
 
 export default function CaffeineTracking() {
@@ -118,7 +129,6 @@ export default function CaffeineTracking() {
           <Text style={styles.cardTitle}>카페인 기록</Text>
         </View>
 
-        {/* 브랜드 선택 */}
         <View style={styles.field}>
           <Text style={styles.label}>카페 브랜드 선택</Text>
 
@@ -158,7 +168,6 @@ export default function CaffeineTracking() {
           )}
         </View>
 
-        {/* 음료 선택 */}
         {brand !== "" && (
           <View style={styles.field}>
             <Text style={styles.label}>음료 선택</Text>
@@ -198,7 +207,6 @@ export default function CaffeineTracking() {
           </View>
         )}
 
-        {/* 사이즈 선택 */}
         {selectedMenuKey !== "" && (
           <View style={styles.field}>
             <Text style={styles.label}>사이즈 선택</Text>
@@ -234,14 +242,13 @@ export default function CaffeineTracking() {
           </View>
         )}
 
-        {/* 섭취 시간 입력 */}
         <View style={styles.field}>
           <Text style={styles.label}>섭취 시간 입력 (HH:MM)</Text>
 
           <TextInput
             style={styles.inputBox}
             value={drinkTime}
-            onChangeText={setDrinkTime}
+            onChangeText={(text) => setDrinkTime(formatTimeInput(text))}
             placeholder="예: 13:45"
             placeholderTextColor="#999"
             keyboardType="numeric"
@@ -249,7 +256,6 @@ export default function CaffeineTracking() {
           />
         </View>
 
-        {/* 카페인 함량 */}
         {brand && drink && size && (
           <View style={styles.caffeineBox}>
             <Text style={styles.caffeineLabel}>카페인 함량</Text>
@@ -257,7 +263,6 @@ export default function CaffeineTracking() {
           </View>
         )}
 
-        {/* 추가 버튼 */}
         <TouchableOpacity
           style={[
             styles.addButton,
@@ -270,7 +275,6 @@ export default function CaffeineTracking() {
         </TouchableOpacity>
       </View>
 
-      {/* 기록 리스트 */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>오늘 마신 카페인 목록</Text>
 
