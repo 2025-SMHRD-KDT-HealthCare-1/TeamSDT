@@ -14,47 +14,46 @@ router.post("/", (req, res) => {
   console.log("받은 데이터:", req.body);
 
   try {
-    // const pythonFile = path.join(__dirname, "../ai/sleep_ai_wrapper.py");
+    const pythonFile = path.join(__dirname, "../ai/sleep_ai_wrapper.py");
 
-    // // Python 3.11 고정 실행
-    // const py = spawn("py", ["-3.11", pythonFile]);
+    // Python 3.11 고정 실행
+    const py = spawn("py", ["-3.11", pythonFile]);
 
-    // // JSON → Python stdin 으로 전달
-    // py.stdin.write(JSON.stringify(req.body));
-    // py.stdin.end();
+    // JSON → Python stdin 으로 전달
+    py.stdin.write(JSON.stringify(req.body));
+    py.stdin.end();
 
-    // let result = "";
+    let result = "";
 
-    // py.stdout.on("data", (data) => {
-    //   result += data.toString();
-    // });
+    py.stdout.on("data", (data) => {
+      result += data.toString();
+    });
 
-    // py.stderr.on("data", (data) => {
-    //   console.error("stderr:", data.toString());
-    // });
+    py.stderr.on("data", (data) => {
+      console.error("stderr:", data.toString());
+    });
 
-    // py.stderr.on("data", (err) => {
-    //   console.error("Python stderr:", err.toString());
-    // });
+    py.stderr.on("data", (err) => {
+      console.error("Python stderr:", err.toString());
+    });
 
-    // py.on("close", (code) => {
-    //   console.log("Python 종료:", code);
-    //   console.log("Python Raw Output:", result);
+    py.on("close", (code) => {
+      console.log("Python 종료:", code);
+      console.log("Python Raw Output:", result);
 
-    //   if (code !== 0) {
-    //     return res.status(500).json({ error: "Python process error" });
-    //   }
+      if (code !== 0) {
+        return res.status(500).json({ error: "Python process error" });
+      }
 
-    //   try {
-    //     // 이제 result 자체가 JSON 문자열이기 때문에 바로 파싱 가능
-    //     const jsonResult = JSON.parse(result);
-    //     return res.json(jsonResult);
-    //   } catch (err) {
-    //     console.error("JSON 파싱 오류:", err);
-    //     return res.status(500).json({ error: "JSON parsing failed" });
-    //   }
-    // });
-    return res.json({success:true, message:"test"});
+      try {
+        // 이제 result 자체가 JSON 문자열이기 때문에 바로 파싱 가능
+        const jsonResult = JSON.parse(result);
+        return res.json(jsonResult);
+      } catch (err) {
+        console.error("JSON 파싱 오류:", err);
+        return res.status(500).json({ error: "JSON parsing failed" });
+      }
+    });
   } catch (err) {
     console.error("서버 오류:", err);
     res.status(500).json({

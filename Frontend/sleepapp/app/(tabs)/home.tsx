@@ -93,6 +93,8 @@ export default function HomeScreen() {
             }),
           }
         );
+        
+        console.log(aiRes)
 
         const data = await aiRes.json();
         if (!isMounted) return;
