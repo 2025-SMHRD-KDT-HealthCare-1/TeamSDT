@@ -36,6 +36,10 @@ app.use("/screentime", screenRoutes);
 const resultRouter = require("./routes/result");
 app.use("/result", resultRouter);
 
+// home 라우터 연결
+const homeRouter = require("./routes/home");
+app.use("/home", homeRouter);
+
 app.listen(3000, () => {
   console.log("서버 실행됨 -> http://172.20.10.5:3000");
 });
