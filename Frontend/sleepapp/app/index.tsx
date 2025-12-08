@@ -62,7 +62,6 @@ export default function Login() {
         onChangeText={setPassword}
       />
 
-      {/* 🔥 여기 수정됨 */}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>로그인</Text>
       </TouchableOpacity>

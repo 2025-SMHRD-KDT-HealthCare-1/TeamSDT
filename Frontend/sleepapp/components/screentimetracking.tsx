@@ -7,7 +7,6 @@ export default function ScreenTimeTracking() {
   const [apps, setApps] = useState<AppUsage[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 랜덤 색상
   const getColorByIndex = (index: number) => {
     const colors = ["#FFD93D", "#FF1E1E", "#FF6B81", "#60A5FA", "#2ECC71"];
     return colors[index % colors.length];
@@ -17,7 +16,6 @@ export default function ScreenTimeTracking() {
     const loadData = async () => {
       const raw = await getAppUsageStats();
 
-      // ----------- 0분 제거 + 중복 제거 -----------  
       const unique: AppUsage[] = [];
       const seen = new Set();
 
@@ -30,7 +28,6 @@ export default function ScreenTimeTracking() {
         unique.push(item);
       });
 
-      // ----------- 색상 + 유니크 ID 생성 -----------  
       const processed = unique.map((app, index) => ({
         ...app,
         color: getColorByIndex(index),
@@ -66,7 +63,6 @@ export default function ScreenTimeTracking() {
 
   return (
     <ScrollView style={styles.container}>
-      {/* 오늘 총 시간 */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>오늘 총 스크린타임</Text>
         <Text style={styles.totalTime}>
@@ -74,7 +70,6 @@ export default function ScreenTimeTracking() {
         </Text>
       </View>
 
-      {/* 앱 리스트 */}
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>사용 앱</Text>
 
@@ -103,7 +98,6 @@ export default function ScreenTimeTracking() {
         ))}
       </View>
 
-      {/* 아래 안내 */}
       <View style={styles.bottomNotice}>
         <Text style={styles.bottomText}>📱 하루 스크린타임을 줄여보세요!</Text>
       </View>

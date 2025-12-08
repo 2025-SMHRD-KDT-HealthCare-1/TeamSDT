@@ -11,7 +11,7 @@ import {
   Alert,
 } from "react-native";
 
-import { router } from "expo-router";   // ✅ 추가 (navigation 대신 router)
+import { router } from "expo-router";
 import api from "./api/apiconfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/joinstyles";
@@ -26,7 +26,6 @@ export default function Join() {
 
   const [checkDone, setCheckDone] = useState(false);
 
-  // 🔥 아이디 중복 확인
   const checkDuplicate = async () => {
     if (!userId.trim()) return Alert.alert("아이디를 입력하세요");
 
@@ -47,7 +46,6 @@ export default function Join() {
     }
   };
 
-  // 🔥 회원가입 요청
   const joinHandler = async () => {
     if (!checkDone) {
       return Alert.alert("아이디 중복확인을 먼저 해주세요!");
@@ -68,8 +66,7 @@ export default function Join() {
 
       Alert.alert("회원가입 성공", "로그인 화면으로 이동합니다.");
 
-      // navigation.navigate("Login") ❌ (사용 불가)
-      router.replace("/");   // ✅ Expo Router 방식으로 수정
+      router.replace("/");
 
     } catch (err) {
       console.log("회원가입 오류:", err.response?.data);
@@ -90,7 +87,6 @@ export default function Join() {
           <View style={styles.container}>
             <Text style={styles.title}>회원가입</Text>
 
-            {/* 아이디 입력 + 중복확인 */}
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <TextInput
                 style={[styles.input, { flex: 1 }]}

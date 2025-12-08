@@ -50,12 +50,10 @@ export default function SleepResult() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0A0D1A" }}>
       
-      {/* ⭐ 밤하늘 별 배경 */}
       <StarsBackground style={styles.starsContainer} />
 
       <ScrollView style={styles.container}>
         
-        {/* 탭 */}
         <View style={styles.tabContainer}>
           {["day", "week", "month", "all"].map((key) => (
             <TouchableOpacity
@@ -83,7 +81,6 @@ export default function SleepResult() {
           ))}
         </View>
 
-        {/* 그래프 */}
         <View style={styles.graphContainer}>
           <Text style={styles.graphTitle}>수면 시간</Text>
 
@@ -117,7 +114,6 @@ export default function SleepResult() {
           )}
         </View>
 
-        {/* AI 분석 */}
         <View style={styles.aiBox}>
           <Text style={styles.aiTitle}>AI 수면 흐름 분석</Text>
 
@@ -135,7 +131,6 @@ export default function SleepResult() {
           </Text>
         </View>
 
-        {/* 푸터 */}
         <View style={styles.footerSection}>
           <Text style={styles.emoji}>😎🛏️</Text>
           <Text style={styles.footerText}>좋은 수면 습관을 유지하세요!</Text>
