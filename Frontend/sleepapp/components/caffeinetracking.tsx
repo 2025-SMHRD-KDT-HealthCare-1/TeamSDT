@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
 import api from "../app/api/apiconfig";
 import styles from "../styles/caffeinetrackingstyles";
-import StarsBackground from "../components/starsbackground";
 
 function convertLabel(original: string) {
   let label = original;
@@ -18,7 +17,7 @@ type CaffeineRecord = {
   drink: string;
   size: string;
   caffeine: number;
-  time: string;
+  time: string; // 사용자가 입력
 };
 
 function getNowTimeString() {
@@ -30,10 +29,13 @@ function getNowTimeString() {
 
 export default function CaffeineTracking() {
   const [records, setRecords] = useState<CaffeineRecord[]>([]);
+
   const [brand, setBrand] = useState("");
   const [drink, setDrink] = useState("");
   const [size, setSize] = useState("");
-  const [drinkTime, setDrinkTime] = useState(getNowTimeString());
+
+  const [drinkTime, setDrinkTime] = useState(getNowTimeString()); // 사용자 입력용
+
   const [brandOpen, setBrandOpen] = useState(false);
   const [drinkOpen, setDrinkOpen] = useState(false);
   const [sizeOpen, setSizeOpen] = useState(false);
@@ -41,6 +43,7 @@ export default function CaffeineTracking() {
   const [brandList, setBrandList] = useState<string[]>([]);
   const [drinkList, setDrinkList] = useState<{ label: string; menu_key: string }[]>([]);
   const [sizeList, setSizeList] = useState<{ size: string; caffeine_mg: number }[]>([]);
+
   const [selectedMenuKey, setSelectedMenuKey] = useState("");
 
   useEffect(() => {
@@ -92,10 +95,12 @@ export default function CaffeineTracking() {
     };
 
     setRecords((prev) => [...prev, newRecord]);
+
     setBrand("");
     setDrink("");
     setSize("");
     setSelectedMenuKey("");
+
     setDrinkTime(getNowTimeString());
   };
 
@@ -107,9 +112,6 @@ export default function CaffeineTracking() {
 
   return (
     <View style={styles.container}>
-      
-      <StarsBackground style={styles.starsContainer} />
-
       <View style={styles.card}>
         <View style={styles.cardHeaderRow}>
           <Text style={styles.cardIcon}>☕</Text>
@@ -156,8 +158,119 @@ export default function CaffeineTracking() {
           )}
         </View>
 
+        {/* 음료 선택 */}
+        {brand !== "" && (
+          <View style={styles.field}>
+            <Text style={styles.label}>음료 선택</Text>
+
+            <TouchableOpacity
+              style={styles.selectBox}
+              onPress={() => {
+                setDrinkOpen(!drinkOpen);
+                setSizeOpen(false);
+              }}
+            >
+              <Text style={drink ? styles.selectText : styles.selectPlaceholder}>
+                {drink || "음료를 선택하세요"}
+              </Text>
+              <Text style={styles.selectArrow}>▾</Text>
+            </TouchableOpacity>
+
+            {drinkOpen && (
+              <View style={styles.dropdown}>
+                {drinkList.map((d) => (
+                  <TouchableOpacity
+                    key={d.menu_key}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setDrink(d.label);
+                      setSelectedMenuKey(d.menu_key);
+                      loadSizes(brand, d.menu_key);
+                      setDrinkOpen(false);
+                      setSize("");
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>{d.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* 사이즈 선택 */}
+        {selectedMenuKey !== "" && (
+          <View style={styles.field}>
+            <Text style={styles.label}>사이즈 선택</Text>
+
+            <TouchableOpacity
+              style={styles.selectBox}
+              onPress={() => setSizeOpen(!sizeOpen)}
+            >
+              <Text style={size ? styles.selectText : styles.selectPlaceholder}>
+                {size || "사이즈를 선택하세요"}
+              </Text>
+              <Text style={styles.selectArrow}>▾</Text>
+            </TouchableOpacity>
+
+            {sizeOpen && (
+              <View style={styles.dropdown}>
+                {sizeList.map((s) => (
+                  <TouchableOpacity
+                    key={s.size}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setSize(s.size);
+                      setSizeOpen(false);
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>
+                      {s.size} ({s.caffeine_mg}mg)
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* 섭취 시간 입력 */}
+        <View style={styles.field}>
+          <Text style={styles.label}>섭취 시간 입력 (HH:MM)</Text>
+
+          <TextInput
+            style={styles.inputBox}
+            value={drinkTime}
+            onChangeText={setDrinkTime}
+            placeholder="예: 13:45"
+            placeholderTextColor="#999"
+            keyboardType="numeric"
+            maxLength={5}
+          />
+        </View>
+
+        {/* 카페인 함량 */}
+        {brand && drink && size && (
+          <View style={styles.caffeineBox}>
+            <Text style={styles.caffeineLabel}>카페인 함량</Text>
+            <Text style={styles.caffeineValue}>{getCaffeineAmount()} mg</Text>
+          </View>
+        )}
+
+        {/* 추가 버튼 */}
+        <TouchableOpacity
+          style={[
+            styles.addButton,
+            !(brand && drink && size) && styles.addButtonDisabled,
+          ]}
+          onPress={handleAddRecord}
+          disabled={!(brand && drink && size)}
+        >
+          <Text style={styles.addButtonText}>＋ 추가하기</Text>
+        </TouchableOpacity>
       </View>
 
+      {/* 기록 리스트 */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>오늘 마신 카페인 목록</Text>
 
@@ -176,6 +289,7 @@ export default function CaffeineTracking() {
                     <Text style={styles.recordTitle}>
                       {r.brand} {convertLabel(r.drink)} ({r.size})
                     </Text>
+
                     <View style={styles.recordMetaRow}>
                       <Text style={styles.recordMetaText}>🕒 {r.time}</Text>
                       <Text style={styles.recordDot}>•</Text>

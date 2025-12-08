@@ -41,6 +41,7 @@
     "fft.js": "^4.0.4",
     "lucide-react-native": "^0.554.0",
     "nativewind": "^4.2.1",
+    "node-fetch": "^3.3.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
