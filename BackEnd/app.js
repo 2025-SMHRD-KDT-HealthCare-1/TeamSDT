@@ -40,6 +40,13 @@ app.use("/result", resultRouter);
 const homeRouter = require("./routes/home");
 app.use("/home", homeRouter);
 
+// sleep 라우터 연결
+const sleepRouter = require("./routes/sleep");
+app.use("/sleep", sleepRouter);
+
 app.listen(3000, () => {
   console.log("서버 실행됨 -> http://172.20.10.5:3000");
 });
+
+
+
