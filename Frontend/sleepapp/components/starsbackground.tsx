@@ -1,16 +1,17 @@
 import React from "react";
-import { View, StyleSheet, ViewStyle } from "react-native";
+import { View, StyleSheet, ViewStyle, Dimensions } from "react-native";
 
 interface Props {
   style?: ViewStyle;
 }
+
+const { width, height } = Dimensions.get("window");
 
 export default function StarsBackground({ style }: Props) {
   return (
     <View style={[styles.container, style]}>
       {Array.from({ length: 80 }).map((_, i) => {
         const size = Math.random() * 3 + 1;
-
         return (
           <View
             key={i}
@@ -19,9 +20,8 @@ export default function StarsBackground({ style }: Props) {
               {
                 width: size,
                 height: size,
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                opacity: Math.random() * 0.8 + 0.2,
+                top: Math.random() * height,
+                left: Math.random() * width,
               },
             ]}
           />
@@ -33,10 +33,14 @@ export default function StarsBackground({ style }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
     position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     zIndex: -1,
   },
+
   star: {
     position: "absolute",
     backgroundColor: "white",

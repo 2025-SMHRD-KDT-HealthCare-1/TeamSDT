@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
 import api from "../app/api/apiconfig";
 import styles from "../styles/caffeinetrackingstyles";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // ⭐ 추가됨
 
 function convertLabel(original: string) {
   let label = original;
@@ -45,7 +46,7 @@ export default function CaffeineTracking() {
   const [drink, setDrink] = useState("");
   const [size, setSize] = useState("");
 
-  const [drinkTime, setDrinkTime] = useState(getNowTimeString()); // 사용자 입력용
+  const [drinkTime, setDrinkTime] = useState(getNowTimeString());
 
   const [brandOpen, setBrandOpen] = useState(false);
   const [drinkOpen, setDrinkOpen] = useState(false);
@@ -53,10 +54,26 @@ export default function CaffeineTracking() {
 
   const [brandList, setBrandList] = useState<string[]>([]);
   const [drinkList, setDrinkList] = useState<{ label: string; menu_key: string }[]>([]);
-  const [sizeList, setSizeList] = useState<{ size: string; caffeine_mg: number }[]>([]);
+  const [sizeList, setSizeList] =
+    useState<{ size: string; caffeine_mg: number }[]>([]);
 
   const [selectedMenuKey, setSelectedMenuKey] = useState("");
 
+  // ⭐ 앱 시작 시 저장된 기록 불러오기
+  useEffect(() => {
+    loadStoredRecords();
+  }, []);
+
+  const loadStoredRecords = async () => {
+    try {
+      const saved = await AsyncStorage.getItem("caffeine_records");
+      if (saved) setRecords(JSON.parse(saved));
+    } catch (err) {
+      console.log("저장된 기록 불러오기 오류:", err);
+    }
+  };
+
+  // 기존 브랜드 불러오기
   useEffect(() => {
     api
       .get("/caffeine/brands")
@@ -83,14 +100,14 @@ export default function CaffeineTracking() {
     return found ? found.caffeine_mg : 0;
   };
 
-  const handleAddRecord = () => {
+  // ⭐ 기록 추가 시 AsyncStorage 저장 포함
+  const handleAddRecord = async () => {
     if (!brand || !drink || !size || !drinkTime) {
       Alert.alert("알림", "모든 항목을 입력해주세요.");
       return;
     }
 
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-
     if (!timeRegex.test(drinkTime)) {
       Alert.alert("시간 형식 오류", "'HH:MM' 형식으로 입력해주세요.");
       return;
@@ -105,7 +122,14 @@ export default function CaffeineTracking() {
       time: drinkTime,
     };
 
-    setRecords((prev) => [...prev, newRecord]);
+    const updated = [...records, newRecord];
+    setRecords(updated);
+
+    try {
+      await AsyncStorage.setItem("caffeine_records", JSON.stringify(updated));
+    } catch (err) {
+      console.log("기록 저장 오류:", err);
+    }
 
     setBrand("");
     setDrink("");
@@ -115,8 +139,16 @@ export default function CaffeineTracking() {
     setDrinkTime(getNowTimeString());
   };
 
-  const handleDeleteRecord = (id: string) => {
-    setRecords((prev) => prev.filter((r) => r.id !== id));
+  // ⭐ 삭제 시에도 저장 반영
+  const handleDeleteRecord = async (id: string) => {
+    const updated = records.filter((r) => r.id !== id);
+    setRecords(updated);
+
+    try {
+      await AsyncStorage.setItem("caffeine_records", JSON.stringify(updated));
+    } catch (err) {
+      console.log("기록 삭제 저장 오류:", err);
+    }
   };
 
   const totalCaffeine = records.reduce((s, r) => s + r.caffeine, 0);
@@ -322,9 +354,7 @@ export default function CaffeineTracking() {
       </View>
 
       <View style={styles.noticeWrapper}>
-        <Text style={styles.noticeText}>
-          ※ 카페인이 들어있지 않은 메뉴는 선택사항에 없습니다.
-        </Text>
+        <Text style={styles.noticeText}>※ 카페인이 들어있지 않은 메뉴는 선택사항에 없습니다.</Text>
       </View>
     </View>
   );

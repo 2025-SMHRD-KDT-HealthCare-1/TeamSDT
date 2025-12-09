@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator } from "react-native";
-import api from "../api/apiconfig";
 import { Moon, Clock, Smartphone, Coffee } from "lucide-react-native";
 import styles from "../../styles/homestyles";
 import StarsBackground from "../../components/starsbackground";
@@ -23,7 +22,7 @@ export default function HomeScreen() {
   // ✅ AI
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiAudioBase64, setAiAudioBase64] = useState<string | null>(null); // ✅ 다시 듣기용
+  const [aiAudioBase64, setAiAudioBase64] = useState<string | null>(null);
 
   // ✅ TTS 재생
   async function playBase64Audio(base64Audio?: string) {
@@ -49,76 +48,54 @@ export default function HomeScreen() {
     }
   }
 
+  // -----------------------------------------
+  // 🚀 여기부터 네트워크 제거 → 가짜 데이터 적용
+  // -----------------------------------------
   useEffect(() => {
-    let isMounted = true;
-
     async function init() {
       try {
-        // ✅ 1) 내 프로필
-        const res = await api.get("/user/me");
-        if (!isMounted) return;
+        setLoading(true);
 
-        setNick(res.data.nick);
-        const userId = res.data.user_id;
+        // 📌 1) 가상 유저 정보
+        const fakeUser = {
+          nick: "테스트유저",
+          user_id: "user123",
+        };
+        setNick(fakeUser.nick);
 
-        // ✅ 2) 어제 수면 + 홈 대시보드
-        const dashRes = await api.get(`/home/dashboard/${userId}`);
-        if (!isMounted) return;
+        // 📌 2) 가상 대시보드 데이터 (더미)
+        const fakeDashboard = {
+          totalSleep: { hours: 7, minutes: 40 },
+          sleepTime: { hours: 23, minutes: 10 },
+          wakeTime: { hours: 6, minutes: 50 },
+          screenTime: { hours: 2, minutes: 15 },
+          caffeine: { type: "아메리카노", cups: 2, mg: 180 },
+        };
+        setDashboard(fakeDashboard);
 
-        setDashboard(dashRes.data);
-
-        // ✅ 3) 로딩 종료
-        setLoading(false);
-
-        // ✅ 4) AI 분석 요청 (어제 수면 기준)
+        // 📌 3) 가상 AI 분석 결과 텍스트
         setAiLoading(true);
+        const fakeAiText =
+          "어제 수면 시간이 충분했어요! 👍\n카페인 섭취는 적당한 수준이며, 스마트폰 사용 시간도 괜찮은 편이에요.\n오늘도 좋은 컨디션으로 하루를 보내세요! 😄";
+        setAiText(fakeAiText);
 
-        const totalSleepHour =
-          (dashRes.data?.totalSleep.hours ?? 0) +
-          (dashRes.data?.totalSleep.minutes ?? 0) / 60;
-
-        const aiRes = await fetch(
-          "https://christal-nonsignificative-noneternally.ngrok-free.dev/ai",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              user_name: res.data.nick,
-              caffeine: dashRes.data?.caffeine.mg ?? 0,
-              screen_time:
-                (dashRes.data?.screenTime.hours ?? 0) +
-                (dashRes.data?.screenTime.minutes ?? 0) / 60,
-              sleep_time: totalSleepHour,
-              style: "친근하게",
-            }),
-          }
-        );
-
-        const data = await aiRes.json();
-        if (!isMounted) return;
-
-        setAiText(data.text || "");
-
-        if (data.audio_base64) {
-          setAiAudioBase64(data.audio_base64); // ✅ 다시 듣기 저장
-          playBase64Audio(data.audio_base64);  // ✅ 자동 1회 재생
-        }
+        // 📌 4) 가상 오디오(base64)
+        // 실제 base64는 매우 길어서 테스트용 짧은 빈 오디오(base64) 값 사용
+        const fakeAudio = null; // 🔥 필요하면 base64 테스트용 파일 가능
+        setAiAudioBase64(fakeAudio);
 
       } catch (err) {
-        console.log("Home 초기 로드 에러:", err);
+        console.log("가상 데이터 로드 오류:", err);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-          setAiLoading(false);
-        }
+        setLoading(false);
+        setAiLoading(false);
       }
     }
 
     init();
-    return () => {
-      isMounted = false;
-    };
   }, []);
+
+  // -----------------------------------------
 
   if (loading) {
     return (

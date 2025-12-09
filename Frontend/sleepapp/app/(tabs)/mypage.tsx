@@ -18,8 +18,8 @@ import {
 
 import { Calendar } from "react-native-calendars";
 import styles from "../../styles/mypagestyles";
-import api from "../api/apiconfig";
 import * as Notifications from "expo-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { logout } from "../logout";
 
@@ -30,9 +30,8 @@ interface MyPageProps {
 export default function MyPage({ userName }: MyPageProps) {
   const [selectedDate, setSelectedDate] = useState("");
   const [dailyData, setDailyData] = useState<any>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  /** ⭐ 로그아웃 모달 상태 추가 */
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const [nick, setNick] = useState<string>(userName);
@@ -40,30 +39,101 @@ export default function MyPage({ userName }: MyPageProps) {
 
   const [allowNoti, setAllowNoti] = useState(false);
 
-  const dummyData: any = {
-    "2025-02-01": { sleep: "7시간 30분", screentime: "3시간 15분", caffeine: "150mg" },
-    "2025-02-05": { sleep: "6시간 20분", screentime: "2시간 40분", caffeine: "없음" },
+  // -----------------------------------------
+  // 🚀 가상 유저 정보 (fetchMyInfo 대체)
+  // -----------------------------------------
+  const fakeUser = {
+    user_id: "fake-user-123",
+    nick: "테스트유저",
+    email: "test@example.com",
   };
 
-  useEffect(() => {
-    if (!selectedDate) return;
-    setDailyData(dummyData[selectedDate] || null);
-  }, [selectedDate]);
+  // -----------------------------------------
+  // 🚀 가상 하루 기록
+  // -----------------------------------------
+  const dummyData: any = {
+    "2025-02-01": {
+      sleep: "7시간 30분",
+      screentime: "3시간 15분",
+      caffeine: "150mg",
+    },
+    "2025-02-05": {
+      sleep: "6시간 20분",
+      screentime: "2시간 40분",
+      caffeine: "없음",
+    },
+  };
 
+  // ⭐ 앱 시작 시 오늘 날짜 선택 + 유저 정보 로딩
   useEffect(() => {
-    fetchMyInfo();
+    const today = new Date().toISOString().split("T")[0];
+    setSelectedDate(today);
+
+    // 🚀 API 대신 즉시 가상 유저 주입
+    setNick(fakeUser.nick);
+    setUser(fakeUser);
   }, []);
 
-  const fetchMyInfo = async () => {
+  // ⭐ 날짜 선택 시 데이터 로딩
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    loadDailyCaffeine(selectedDate);
+
+    if (dummyData[selectedDate]) {
+      setDailyData({
+        sleep: dummyData[selectedDate].sleep,
+        screentime: dummyData[selectedDate].screentime,
+        caffeine:
+          dummyData[selectedDate].caffeine || dailyData?.caffeine || "기록 없음",
+      });
+    } else {
+      setDailyData({
+        sleep: null,
+        screentime: null,
+        caffeine: dailyData?.caffeine || "기록 없음",
+      });
+    }
+  }, [selectedDate]);
+
+  // ⭐ 저장된 카페인 기록 불러오기 (로컬만 남김)
+  const loadDailyCaffeine = async (date: string) => {
     try {
-      const res = await api.get("/user/me");
-      setNick(res.data.nick);
-      setUser(res.data);
+      const saved = await AsyncStorage.getItem("daily_caffeine_records");
+      if (!saved) {
+        setDailyData((prev: any) => ({
+          ...prev,
+          caffeine: dummyData[date]?.caffeine ?? "기록 없음",
+        }));
+        return;
+      }
+
+      const data = JSON.parse(saved);
+      const records = data[date];
+
+      if (!records || records.length === 0) {
+        setDailyData((prev: any) => ({
+          ...prev,
+          caffeine: dummyData[date]?.caffeine ?? "기록 없음",
+        }));
+        return;
+      }
+
+      const caffeineTotal = records.reduce(
+        (sum: number, r: any) => sum + r.caffeine,
+        0
+      );
+
+      setDailyData((prev: any) => ({
+        ...prev,
+        caffeine: `${caffeineTotal}mg`,
+      }));
     } catch (err) {
-      console.log("사용자 정보 불러오기 실패:", err);
+      console.log("날짜별 카페인 불러오기 오류:", err);
     }
   };
 
+  // ⭐ 알림 설정
   const handleNotificationToggle = async () => {
     if (allowNoti) {
       setAllowNoti(false);
@@ -79,7 +149,6 @@ export default function MyPage({ userName }: MyPageProps) {
           text: "허용",
           onPress: async () => {
             const { status } = await Notifications.requestPermissionsAsync();
-
             if (status === "granted") {
               setAllowNoti(true);
             } else {
@@ -92,23 +161,10 @@ export default function MyPage({ userName }: MyPageProps) {
     );
   };
 
+  // ⭐ 회원탈퇴 – 실제 API 없이 가상 처리
   const handleDeleteAccount = async () => {
-    try {
-      if (!user?.user_id) {
-        Alert.alert("오류", "유저 정보를 불러오지 못했습니다.");
-        return;
-      }
-
-      const res = await api.delete(`/user/delete/${user.user_id}`);
-      console.log("회원탈퇴 완료:", res.data);
-
-      Alert.alert("탈퇴 완료", "회원탈퇴가 완료되었습니다.");
-
-      await logout();
-    } catch (error) {
-      console.log("회원탈퇴 오류:", error);
-      Alert.alert("오류", "회원탈퇴 중 문제가 발생했습니다.");
-    }
+    Alert.alert("탈퇴 완료", "가상 데이터이므로 실제 탈퇴는 수행되지 않습니다.");
+    await logout();
   };
 
   return (
@@ -139,7 +195,7 @@ export default function MyPage({ userName }: MyPageProps) {
       <View style={styles.innerContainer}>
         <View style={styles.profileSection}>
           <Text style={styles.profileEmoji}>🦥</Text>
-          <Text style={styles.profileName}>{user ? `${nick}님` : "사용자님"}</Text>
+          <Text style={styles.profileName}>{nick}님</Text>
           <Text style={styles.profileDesc}>편안한 수면을 즐기고 계세요</Text>
         </View>
 
@@ -168,13 +224,20 @@ export default function MyPage({ userName }: MyPageProps) {
 
         <View style={styles.dayRecordCard}>
           <Text style={styles.dayRecordTitle}>📅 하루 기록</Text>
+
           {!dailyData ? (
             <Text style={styles.noDataText}>기록이 없습니다.</Text>
           ) : (
             <>
-              <Text style={styles.dayRecordText}>수면 시간: {dailyData.sleep}</Text>
-              <Text style={styles.dayRecordText}>스크린타임: {dailyData.screentime}</Text>
-              <Text style={styles.dayRecordText}>카페인: {dailyData.caffeine}</Text>
+              <Text style={styles.dayRecordText}>
+                수면 시간: {dailyData.sleep || "기록 없음"}
+              </Text>
+              <Text style={styles.dayRecordText}>
+                스크린타임: {dailyData.screentime || "기록 없음"}
+              </Text>
+              <Text style={styles.dayRecordText}>
+                카페인: {dailyData.caffeine || "기록 없음"}
+              </Text>
             </>
           )}
         </View>
@@ -196,8 +259,6 @@ export default function MyPage({ userName }: MyPageProps) {
         </View>
 
         <View style={styles.card}>
-
-          {/* ⭐ 로그아웃 모달 열기 버튼 ⭐ */}
           <TouchableOpacity
             onPress={() => setShowLogoutModal(true)}
             style={styles.rowButtonBorder}
@@ -226,6 +287,7 @@ export default function MyPage({ userName }: MyPageProps) {
         </View>
       </View>
 
+      {/* 로그아웃 모달 */}
       <Modal visible={showLogoutModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
@@ -240,10 +302,7 @@ export default function MyPage({ userName }: MyPageProps) {
                 <Text style={styles.cancelBtnText}>취소</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={logout}
-              >
+              <TouchableOpacity style={styles.deleteBtn} onPress={logout}>
                 <Text style={styles.deleteBtnLabel}>로그아웃</Text>
               </TouchableOpacity>
             </View>
@@ -251,6 +310,7 @@ export default function MyPage({ userName }: MyPageProps) {
         </View>
       </Modal>
 
+      {/* 회원탈퇴 모달 */}
       <Modal visible={showDeleteModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
@@ -265,10 +325,7 @@ export default function MyPage({ userName }: MyPageProps) {
                 <Text style={styles.cancelBtnText}>취소</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={handleDeleteAccount}
-              >
+              <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteAccount}>
                 <Text style={styles.deleteBtnLabel}>탈퇴하기</Text>
               </TouchableOpacity>
             </View>
