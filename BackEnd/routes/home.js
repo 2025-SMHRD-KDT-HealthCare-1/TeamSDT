@@ -2,8 +2,8 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db/database");
 
-router.get("/dashboard/:userId", async (req, res) => {
-  const { userId } = req.params;
+router.get("/dashboard/:userid", async (req, res) => {
+  const { userid } = req.params;
 
   try {
     // ✅ 1) 최근 수면 기록 1건 가져오기
@@ -11,12 +11,12 @@ router.get("/dashboard/:userId", async (req, res) => {
       `
       SELECT SleepStart, SleepEnd, TotalSleepTime, DateValue
       FROM SleepRecord
-      WHERE UserID = ?
+      WHERE userid = ?
         AND SleepEnd IS NOT NULL
       ORDER BY DateValue DESC, SleepStart DESC
       LIMIT 1
       `,
-      [userId]
+      [userid]
     );
 
     let totalSleep = { hours: 0, minutes: 0 };
@@ -47,11 +47,11 @@ router.get("/dashboard/:userId", async (req, res) => {
       `
       SELECT Total_ScreenTime
       FROM ScreenTimeRecord
-      WHERE UserID = ?
+      WHERE userid = ?
       ORDER BY DateValue DESC
       LIMIT 1
       `,
-      [userId]
+      [userid]
     );
 
     let screenTime = { hours: 0, minutes: 0 };
@@ -69,12 +69,12 @@ router.get("/dashboard/:userId", async (req, res) => {
         COUNT(*) AS cups, 
         SUM(Caffeine_Amount) AS totalMg
       FROM CaffeineLog
-      WHERE UserID = ?
+      WHERE userid = ?
       GROUP BY DATE(created_at)
       ORDER BY DATE(created_at) DESC
       LIMIT 1
       `,
-      [userId]
+      [userid]
     );
 
     let caffeine = { type: "종류 정보 없음", cups: 0, mg: 0 };

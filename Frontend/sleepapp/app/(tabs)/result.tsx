@@ -17,7 +17,7 @@ export default function SleepResult() {
   const [tab, setTab] = useState<TabType>("week");
   const [graphData, setGraphData] = useState<any[]>([]);
   const [aiData, setAiData] = useState<any>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userid, setuserid] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,18 +26,18 @@ export default function SleepResult() {
 
   const loadUser = async () => {
     const tokenUser = await AsyncStorage.getItem("user_id");
-    setUserId(tokenUser);
+    setuserid(tokenUser);
   };
 
   useEffect(() => {
-    if (userId) fetchResult();
-  }, [tab, userId]);
+    if (userid) fetchResult();
+  }, [tab, userid]);
 
   const fetchResult = async () => {
     try {
       setError(null);
 
-      const res = await api.get(`/sleep/history/${userId}?period=${tab}`);
+      const res = await api.get(`/sleep/history/${userid}?period=${tab}`);
 
       setGraphData(Array.isArray(res.data.graph) ? res.data.graph : []);
       setAiData(res.data.ai ?? null);

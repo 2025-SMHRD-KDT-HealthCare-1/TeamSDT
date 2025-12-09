@@ -59,15 +59,15 @@ export default function MyPage({ userName }: MyPageProps) {
 
   /**
    * ✅ ✅ ✅ 날짜 기반 하루 기록 API 연동
-   * GET /mypage/day/:userId/:date
+   * GET /mypage/day/:userid/:date
    */
   const loadDailyAll = async (date: string) => {
     try {
       if (!user?.user_id) return;
 
-      const userId = user.user_id;
+      const userid = user.user_id;
 
-      const res = await api.get(`/mypage/day/${userId}/${date}`);
+      const res = await api.get(`/mypage/day/${userid}/${date}`);
       const data = res.data;
 
       setDailyData({

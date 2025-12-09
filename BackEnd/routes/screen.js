@@ -26,7 +26,7 @@ router.post("/upload", async (req, res) => {
     // 🔥 DB 컬럼명에 맞게 수정: Top_App → App_Name
     const sql = `
       INSERT INTO ScreenTimeRecord 
-      (ScreenTime_ID, UserID, DateValue, Total_ScreenTime, App_Name, Usage_Time)
+      (ScreenTime_ID, userid, DateValue, Total_ScreenTime, App_Name, Usage_Time)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
 
@@ -59,7 +59,7 @@ router.get("/day/:user_id/:date", async (req, res) => {
 
     const sql = `
       SELECT * FROM ScreenTimeRecord
-      WHERE UserID = ? AND DateValue = ?
+      WHERE userid = ? AND DateValue = ?
     `;
 
     const [rows] = await db.execute(sql, [user_id, date]);
@@ -93,17 +93,17 @@ router.get("/day/:user_id/:date", async (req, res) => {
 /**
  * ⭐ 3️⃣ 마이페이지 simple API
  */
-router.get("/simple/:userId/:date", async (req, res) => {
-  const { userId, date } = req.params;
+router.get("/simple/:userid/:date", async (req, res) => {
+  const { userid, date } = req.params;
 
   try {
     const [[row]] = await db.execute(
       `
       SELECT Total_ScreenTime 
       FROM ScreenTimeRecord 
-      WHERE UserID = ? AND DateValue = ?
+      WHERE userid = ? AND DateValue = ?
       `,
-      [userId, date]
+      [userid, date]
     );
 
     if (!row) {

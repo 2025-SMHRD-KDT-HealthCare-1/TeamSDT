@@ -9,7 +9,7 @@ const { v4: uuidv4 } = require("uuid");
 router.get("/brands", async (req, res) => {
   try {
     const [rows] = await db.execute(
-      "SELECT DISTINCT brand FROM caffeine_menu ORDER BY brand"
+      "SELECT DISTINCT brand FROM CaffeineMenu ORDER BY brand"
     );
     const brands = rows.map((row) => row.brand);
     res.json({ brands });
@@ -31,7 +31,7 @@ router.get("/menus", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      "SELECT DISTINCT menu FROM caffeine_menu WHERE brand = ? ORDER BY menu",
+      "SELECT DISTINCT menu FROM CaffeineMenu WHERE brand = ? ORDER BY menu",
       [brand]
     );
 
@@ -72,7 +72,7 @@ router.get("/sizes", async (req, res) => {
   try {
     const [rows] = await db.execute(
       `SELECT size, caffeine_mg 
-       FROM caffeine_menu 
+       FROM CaffeineMenu
        WHERE brand = ?
        AND menu LIKE CONCAT('%', ?, '%')`,
       [brand, menu_key]
@@ -99,7 +99,7 @@ router.post("/calc", async (req, res) => {
       const { brand, menu, size, count } = item;
 
       const [rows] = await db.execute(
-        "SELECT caffeine_mg FROM caffeine_menu WHERE brand = ? AND menu = ? AND size = ?",
+        "SELECT caffeine_mg FROM CaffeineMenu WHERE brand = ? AND menu = ? AND size = ?",
         [brand, menu, size]
       );
 
@@ -119,9 +119,9 @@ router.post("/calc", async (req, res) => {
  * 5️⃣ 카페인 마신 기록 저장
  * -----------------------------------------------------*/
 router.post("/log", async (req, res) => {
-  const { userId, drink, size, caffeine, intakeTime } = req.body;
+  const { userid, drink, size, caffeine, intakeTime } = req.body;
 
-  if (!userId || !drink || !size || !caffeine || !intakeTime) {
+  if (!userid || !drink || !size || !caffeine || !intakeTime) {
     return res.status(400).json({ message: "필수 값 누락" });
   }
 
@@ -130,9 +130,9 @@ router.post("/log", async (req, res) => {
 
     await db.execute(
       `INSERT INTO CaffeineLog 
-       (Caffeine_ID, UserID, DrinkType, DrinkSize, Caffeine_Amount, IntakeTime)
+       (Caffeine_ID, userid, DrinkType, DrinkSize, Caffeine_Amount, IntakeTime)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [caffeineId, userId, drink, size, caffeine, intakeTime]
+      [caffeineId, userid, drink, size, caffeine, intakeTime]
     );
 
     res.json({ success: true });
@@ -145,19 +145,19 @@ router.post("/log", async (req, res) => {
 /* -------------------------------------------------------
  * 6️⃣ 기존 전체 기록 조회
  * -----------------------------------------------------*/
-router.get("/list/:userId", async (req, res) => {
+router.get("/list/:userid", async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userid } = req.params;
 
     const [rows] = await db.execute(
       `
-      SELECT Caffeine_ID, UserID, DrinkType, DrinkSize, 
+      SELECT Caffeine_ID, userid, DrinkType, DrinkSize, 
              Caffeine_Amount, IntakeTime, created_at
       FROM CaffeineLog
-      WHERE UserID = ?
+      WHERE userid = ?
       ORDER BY created_at DESC
       `,
-      [userId]
+      [userid]
     );
 
     res.json(rows);
@@ -171,18 +171,18 @@ router.get("/list/:userId", async (req, res) => {
  * ⭐ 7️⃣ 마이페이지용 — 날짜별 총 카페인 섭취량
  *     created_at 날짜 기준으로 변경 (정확한 날짜 비교)
  * -----------------------------------------------------*/
-router.get("/simple/:userId/:date", async (req, res) => {
-  const { userId, date } = req.params;
+router.get("/simple/:userid/:date", async (req, res) => {
+  const { userid, date } = req.params;
 
   try {
     const [rows] = await db.execute(
       `
       SELECT Caffeine_Amount
       FROM CaffeineLog
-      WHERE UserID = ?
+      WHERE userid = ?
         AND DATE(created_at) = ?
       `,
-      [userId, date]
+      [userid, date]
     );
 
     if (rows.length === 0) {

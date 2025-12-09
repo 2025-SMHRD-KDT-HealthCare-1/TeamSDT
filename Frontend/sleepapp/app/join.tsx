@@ -17,7 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/joinstyles";
 
 export default function Join() {
-  const [userId, setUserId] = useState("");
+  const [userid, setuserid] = useState("");
   const [password, setPassword] = useState("");
   const [passwordCheck, setPasswordCheck] = useState("");
   const [nick, setNick] = useState("");
@@ -27,10 +27,10 @@ export default function Join() {
   const [checkDone, setCheckDone] = useState(false);
 
   const checkDuplicate = async () => {
-    if (!userId.trim()) return Alert.alert("아이디를 입력하세요");
+    if (!userid.trim()) return Alert.alert("아이디를 입력하세요");
 
     try {
-      const res = await api.get(`/auth/check-id?user_id=${userId}`);
+      const res = await api.get(`/auth/check-id?user_id=${userid}`);
       console.log("중복확인 응답:", res.data);
 
       if (res.data.exists) {
@@ -57,7 +57,7 @@ export default function Join() {
 
     try {
       const res = await api.post("/auth/join", {
-        user_id: userId,
+        user_id: userid,
         password,
         nick,
         email,
@@ -92,8 +92,8 @@ export default function Join() {
                 style={[styles.input, { flex: 1 }]}
                 placeholder="아이디"
                 placeholderTextColor="#64748B"
-                value={userId}
-                onChangeText={setUserId}
+                value={userid}
+                onChangeText={setuserid}
               />
               <TouchableOpacity style={styles.smallBtn} onPress={checkDuplicate}>
                 <Text style={styles.smallBtnText}>중복확인</Text>

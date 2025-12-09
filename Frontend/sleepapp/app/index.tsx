@@ -7,7 +7,7 @@ import styles from "../styles/loginstyles";
 
 export default function Login() {
   const router = useRouter();
-  const [user_id, setUserId] = useState("");
+  const [user_id, setuserid] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
@@ -53,7 +53,7 @@ export default function Login() {
       <TextInput
         style={styles.input}
         placeholder="아이디"
-        onChangeText={setUserId}
+        onChangeText={setuserid}
       />
       <TextInput
         style={styles.input}

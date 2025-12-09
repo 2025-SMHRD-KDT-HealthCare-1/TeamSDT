@@ -53,10 +53,10 @@ router.get("/caffeine/:id", async (req, res) => {
   try {
     const [rows] = await db.execute(
       `
-      SELECT Caffeine_ID, UserID, DrinkType, DrinkSize, 
+      SELECT Caffeine_ID, userid, DrinkType, DrinkSize, 
              Caffeine_Amount, IntakeTime, created_at
       FROM CaffeineLog
-      WHERE UserID = ?
+      WHERE userid = ?
       ORDER BY created_at DESC
       `,
       [id]
@@ -94,8 +94,8 @@ router.get("/screentime/:id", async (req, res) => {
  * 수면 + 스크린타임 + 카페인 총합을 단순 표시용 데이터로 반환
  */
 
-router.get("/day/:userId/:date", async (req, res) => {
-  const { userId, date } = req.params;
+router.get("/day/:userid/:date", async (req, res) => {
+  const { userid, date } = req.params;
 
   try {
     // ✅ 1) 수면 (DateValue 기준)
@@ -103,11 +103,11 @@ router.get("/day/:userId/:date", async (req, res) => {
       `
       SELECT TotalSleepTime
       FROM SleepRecord
-      WHERE UserID = ?
+      WHERE userid = ?
       AND DateValue = ?
       LIMIT 1
       `,
-      [userId, date]
+      [userid, date]
     );
 
     let sleepText = "기록 없음";
@@ -122,11 +122,11 @@ router.get("/day/:userId/:date", async (req, res) => {
       `
       SELECT Total_ScreenTime
       FROM ScreenTimeRecord
-      WHERE UserID = ?
+      WHERE userid = ?
       AND DateValue = ?
       LIMIT 1
       `,
-      [userId, date]
+      [userid, date]
     );
 
     let screenText = "기록 없음";
@@ -141,10 +141,10 @@ router.get("/day/:userId/:date", async (req, res) => {
       `
       SELECT SUM(Caffeine_Amount) AS totalMg
       FROM CaffeineLog
-      WHERE UserID = ?
+      WHERE userid = ?
       AND DATE(IntakeTime) = ?
       `,
-      [userId, date]
+      [userid, date]
     );
 
     let caffeineText = caffeine?.totalMg
@@ -170,9 +170,9 @@ router.delete("/data/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    await db.execute("DELETE FROM CaffeineLog WHERE UserID = ?", [id]);
+    await db.execute("DELETE FROM CaffeineLog WHERE userid = ?", [id]);
     await db.execute("DELETE FROM screentime_logs WHERE user_id = ?", [id]);
-    await db.execute("DELETE FROM SleepRecord WHERE UserID = ?", [id]);
+    await db.execute("DELETE FROM SleepRecord WHERE userid = ?", [id]);
 
     res.json({ message: "데이터 초기화 완료" });
 

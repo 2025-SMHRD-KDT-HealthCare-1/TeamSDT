@@ -59,7 +59,7 @@ router.get("/sleep", async (req, res) => {
   try {
     // 수면 설정
     const [settingRows] = await db.execute(
-      `SELECT SleepTime, WakeTime FROM SleepSetting WHERE UserID = ?`,
+      `SELECT SleepTime, WakeTime FROM SleepSetting WHERE userid = ?`,
       [user_id]
     );
 
@@ -75,7 +75,7 @@ router.get("/sleep", async (req, res) => {
 
     // 스크린타임 기록
     const [screenRows] = await db.execute(
-      `SELECT DateValue, Total_ScreenTime FROM ScreenTimeRecord WHERE UserID = ?`,
+      `SELECT DateValue, Total_ScreenTime FROM ScreenTimeRecord WHERE userid = ?`,
       [user_id]
     );
 

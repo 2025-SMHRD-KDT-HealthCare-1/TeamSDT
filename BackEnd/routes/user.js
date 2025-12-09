@@ -196,11 +196,11 @@ router.get("/me", async (req, res) => {
     const SECRET = process.env.JWT_SECRET || "mysecretkey";
 
     const decoded = jwt.verify(token, SECRET);
-    const userId = decoded.user_id;
+    const userid = decoded.user_id;
 
     const [rows] = await db.execute(
       "SELECT user_id, nick, email, phone FROM users WHERE user_id = ? AND is_deleted = 0",
-      [userId]
+      [userid]
     );
 
     if (rows.length === 0) {
