@@ -33,24 +33,14 @@ export default function SleepResult() {
     if (userId) fetchResult();
   }, [tab, userId]);
 
-  // ✅ ✅ ✅ 여기만 실데이터 연동으로 교체됨
   const fetchResult = async () => {
     try {
       setError(null);
 
-      // ✅ 실제 수면 기록 기반 API
-      const res = await api.get(
-        `/sleep/history/${userId}?period=${tab}`
-      );
+      const res = await api.get(`/sleep/history/${userId}?period=${tab}`);
 
-      // ✅ 그래프 데이터만 연결
-      setGraphData(
-        Array.isArray(res.data.graph) ? res.data.graph : []
-      );
-
-      // ✅ AI는 아직 유지 (없으면 null)
+      setGraphData(Array.isArray(res.data.graph) ? res.data.graph : []);
       setAiData(res.data.ai ?? null);
-
     } catch (err) {
       setError("서버 연결 실패");
     }
@@ -58,26 +48,20 @@ export default function SleepResult() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0A0D1A" }}>
-      
       <StarsBackground style={styles.starsContainer} />
 
       <ScrollView style={styles.container}>
-        
+
+        {/* 탭 */}
         <View style={styles.tabContainer}>
           {["day", "week", "month", "all"].map((key) => (
             <TouchableOpacity
               key={key}
               onPress={() => setTab(key as TabType)}
-              style={[
-                styles.tabBtn,
-                tab === key && styles.tabSelected
-              ]}
+              style={[styles.tabBtn, tab === key && styles.tabSelected]}
             >
               <Text
-                style={[
-                  styles.tabText,
-                  tab === key && styles.tabSelectedText
-                ]}
+                style={[styles.tabText, tab === key && styles.tabSelectedText]}
               >
                 {{
                   day: "일",
@@ -90,6 +74,7 @@ export default function SleepResult() {
           ))}
         </View>
 
+        {/* 그래프 */}
         <View style={styles.graphContainer}>
           <Text style={styles.graphTitle}>수면 시간</Text>
 
@@ -109,7 +94,12 @@ export default function SleepResult() {
 
                 return (
                   <View key={`${item.label}-${idx}`} style={styles.barItem}>
-                    <View style={[styles.bar, { height: barHeight, backgroundColor: barColor }]} />
+                    <View
+                      style={[
+                        styles.bar,
+                        { height: barHeight, backgroundColor: barColor },
+                      ]}
+                    />
                     <Text style={[styles.barLabel, { color: barColor }]}>
                       {item.label}
                     </Text>
@@ -123,21 +113,27 @@ export default function SleepResult() {
           )}
         </View>
 
+        {/* AI 상세 분석 */}
         <View style={styles.aiBox}>
           <Text style={styles.aiTitle}>AI 수면 흐름 분석</Text>
 
-          <Text style={styles.aiText}>
-            {aiData ? (
-              <>
-                {aiData.summary}{"\n"}
-                {aiData.problem}{"\n"}
-                {aiData.effect}{"\n"}
-                {aiData.solution}
-              </>
-            ) : (
-              "분석 데이터 없음"
-            )}
-          </Text>
+          {aiData ? (
+            <>
+              <Text style={styles.aiSectionTitle}>요약</Text>
+              <Text style={styles.aiText}>{aiData.summary}</Text>
+
+              <Text style={styles.aiSectionTitle}>원인</Text>
+              <Text style={styles.aiText}>{aiData.problem}</Text>
+
+              <Text style={styles.aiSectionTitle}>영향</Text>
+              <Text style={styles.aiText}>{aiData.effect}</Text>
+
+              <Text style={styles.aiSectionTitle}>해결 방안</Text>
+              <Text style={styles.aiText}>{aiData.solution}</Text>
+            </>
+          ) : (
+            <Text style={styles.aiText}>분석 데이터 없음</Text>
+          )}
         </View>
 
         <View style={styles.footerSection}>

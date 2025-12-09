@@ -10,6 +10,18 @@ router.post("/start", async (req, res) => {
   const { userId, sleepTime, wakeTime } = req.body;
 
   try {
+    const now = new Date();
+    const hour = now.getHours();
+    let dateValue;
+
+    if (hour < 5) {
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      dateValue = yesterday.toISOString().slice(0, 10);
+    } else {
+      dateValue = now.toISOString().slice(0, 10);
+    }
+
     const [exists] = await db.execute(
       `SELECT SleepRecord_ID 
        FROM SleepRecord 
@@ -22,8 +34,8 @@ router.post("/start", async (req, res) => {
       await db.execute(
         `INSERT INTO SleepRecord 
          (SleepRecord_ID, UserID, DateValue, TotalSleepTime, SleepStart, SleepEnd, Caffeine_Effect, RunningTime)
-         VALUES (UUID(), ?, CURDATE(), 0, DATE_FORMAT(NOW(), '%H:%i'), NULL, 0, '')`,
-        [userId]
+         VALUES (UUID(), ?, ?, 0, DATE_FORMAT(NOW(), '%H:%i'), NULL, 0, '')`,
+        [userId, dateValue]
       );
     }
 
@@ -237,7 +249,7 @@ router.post("/screen-event", async (req, res) => {
 });
 
 /**
- * 5️⃣ Result 그래프 + AI 분석 API
+ * 5️⃣ 히스토리 + AI 분석
  */
 router.get("/history/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -280,7 +292,7 @@ router.get("/history/:userId", async (req, res) => {
       const totalSleepHour = Number((latest.TotalSleepTime / 60).toFixed(1));
 
       const [[user]] = await db.execute(
-        `SELECT Nick FROM User WHERE UserID = ?`,
+        `SELECT Nick FROM Users WHERE UserID = ?`,
         [userId]
       );
 
@@ -307,6 +319,88 @@ router.get("/history/:userId", async (req, res) => {
   } catch (err) {
     console.error("sleep history error:", err);
     res.status(500).json({ message: "수면 히스토리 조회 실패" });
+  }
+});
+
+/**
+ * 6️⃣ 기존 하루 수면 조회 API
+ */
+router.get("/daily/:userId/:date", async (req, res) => {
+  const { userId, date } = req.params;
+
+  try {
+    const [[row]] = await db.execute(
+      `
+      SELECT TotalSleepTime, SleepStart, SleepEnd
+      FROM SleepRecord
+      WHERE UserID = ?
+        AND DATE(DateValue) = ?
+      LIMIT 1
+      `,
+      [userId, date]
+    );
+
+    res.json(row || null);
+  } catch (err) {
+    console.error("sleep daily error:", err);
+    res.status(500).json({ message: "하루 수면 조회 오류" });
+  }
+});
+
+/**
+ * 7️⃣ 마이페이지 하루 통합 기록 조회
+ */
+router.get("/day/:userId/:date", async (req, res) => {
+  const { userId, date } = req.params;
+
+  try {
+    const [[sleepRow]] = await db.execute(
+      `SELECT TotalSleepTime 
+       FROM SleepRecord 
+       WHERE UserID = ? AND DATE(DateValue) = ?`,
+      [userId, date]
+    );
+
+    const sleepText = sleepRow
+      ? `${Math.floor(sleepRow.TotalSleepTime / 60)}시간 ${sleepRow.TotalSleepTime % 60}분`
+      : "기록 없음";
+
+    const [[screenRow]] = await db.execute(
+      `SELECT Total_ScreenTime 
+       FROM ScreenTimeRecord 
+       WHERE UserID = ? AND DATE(DateValue) = ?`,
+      [userId, date]
+    );
+
+    const screenText = screenRow
+      ? `${Math.floor(screenRow.Total_ScreenTime / 60)}시간 ${
+          screenRow.Total_ScreenTime % 60
+        }분`
+      : "기록 없음";
+
+    const [caffeineRows] = await db.execute(
+      `SELECT Caffeine_Amount 
+       FROM CaffeineLog 
+       WHERE UserID = ? AND DATE(created_at) = ?`,
+      [userId, date]
+    );
+
+    const totalCaffeine = caffeineRows.reduce(
+      (s, r) => s + Number(r.Caffeine_Amount),
+      0
+    );
+
+    const caffeineText =
+      caffeineRows.length > 0 ? `${totalCaffeine}mg` : "기록 없음";
+
+    res.json({
+      sleep: sleepText,
+      screentime: screenText,
+      caffeine: caffeineText,
+    });
+  } catch (err) {
+    console.error("GET /sleep/day error:", err);
+    res.status(500).json({ message: "하루 기록 통합 조회 오류" });
   }
 });
 

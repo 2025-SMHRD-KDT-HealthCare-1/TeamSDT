@@ -10,72 +10,51 @@ import * as FileSystem from "expo-file-system/legacy";
 export default function HomeScreen() {
   const [nick, setNick] = useState("");
   const [loading, setLoading] = useState(true);
+  const [dashboard, setDashboard] = useState<any>(null);
 
-  // ✅ 어제 수면 + 홈 대시보드 데이터
-  const [dashboard, setDashboard] = useState<{
-    totalSleep: { hours: number; minutes: number };
-    sleepTime: { hours: number; minutes: number };
-    wakeTime: { hours: number; minutes: number };
-    screenTime: { hours: number; minutes: number };
-    caffeine: { type: string; cups: number; mg: number };
-  } | null>(null);
-
-  // ✅ AI
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiAudioBase64, setAiAudioBase64] = useState<string | null>(null);
 
-  // ✅ TTS 재생
   async function playBase64Audio(base64Audio?: string) {
     try {
-      if (!base64Audio) {
-        console.log("⚠️ TTS 음성 데이터가 없습니다.");
-        return;
-      }
+      if (!base64Audio) return;
 
-      const fileUri =
-        (FileSystem as any).documentDirectory + "ai_tts.mp3";
+      const fileUri = FileSystem.documentDirectory + "ai_tts.mp3";
 
       await FileSystem.writeAsStringAsync(fileUri, base64Audio, {
-        encoding: "base64",
+        encoding: FileSystem.EncodingType.Base64,
       });
 
-      await Audio.Sound.createAsync(
-        { uri: fileUri },
-        { shouldPlay: true }
-      );
+      await Audio.Sound.createAsync({ uri: fileUri }, { shouldPlay: true });
     } catch (err) {
       console.log("TTS 재생 오류:", err);
     }
   }
 
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
 
-    async function init() {
+    async function load() {
       try {
-        // ✅ 1) 내 프로필
-        const res = await api.get("/user/me");
-        if (!isMounted) return;
+        const me = await api.get("/user/me");
+        if (!mounted) return;
 
-        setNick(res.data.nick);
-        const userId = res.data.user_id;
+        setNick(me.data.nick);
 
-        // ✅ 2) 어제 수면 + 홈 대시보드
-        const dashRes = await api.get(`/home/dashboard/${userId}`);
-        if (!isMounted) return;
+        const dash = await api.get(`/home/dashboard/${me.data.user_id}`);
+        if (!mounted) return;
 
-        setDashboard(dashRes.data);
+        setDashboard(dash.data);
 
-        // ✅ 3) 로딩 종료
         setLoading(false);
 
-        // ✅ 4) AI 분석 요청 (어제 수면 기준)
+        // AI 호출
         setAiLoading(true);
 
         const totalSleepHour =
-          (dashRes.data?.totalSleep.hours ?? 0) +
-          (dashRes.data?.totalSleep.minutes ?? 0) / 60;
+          (dash.data?.totalSleep.hours ?? 0) +
+          (dash.data?.totalSleep.minutes ?? 0) / 60;
 
         const aiRes = await fetch(
           "https://christal-nonsignificative-noneternally.ngrok-free.dev/ai",
@@ -83,11 +62,11 @@ export default function HomeScreen() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              user_name: res.data.nick,
-              caffeine: dashRes.data?.caffeine.mg ?? 0,
+              user_name: me.data.nick,
+              caffeine: dash.data?.caffeine.mg ?? 0,
               screen_time:
-                (dashRes.data?.screenTime.hours ?? 0) +
-                (dashRes.data?.screenTime.minutes ?? 0) / 60,
+                (dash.data?.screenTime.hours ?? 0) +
+                (dash.data?.screenTime.minutes ?? 0) / 60,
               sleep_time: totalSleepHour,
               style: "친근하게",
             }),
@@ -95,7 +74,7 @@ export default function HomeScreen() {
         );
 
         const data = await aiRes.json();
-        if (!isMounted) return;
+        if (!mounted) return;
 
         setAiText(data.text || "");
 
@@ -104,18 +83,18 @@ export default function HomeScreen() {
           playBase64Audio(data.audio_base64);
         }
       } catch (err) {
-        console.log("Home 초기 로드 에러:", err);
+        console.log(err);
       } finally {
-        if (isMounted) {
+        if (mounted) {
           setLoading(false);
           setAiLoading(false);
         }
       }
     }
 
-    init();
+    load();
     return () => {
-      isMounted = false;
+      mounted = false;
     };
   }, []);
 
@@ -133,23 +112,20 @@ export default function HomeScreen() {
       <StarsBackground style={styles.starsContainer} />
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* ✅ 헤더 */}
-        <View
-          style={[styles.header, { backgroundColor: "rgba(62,79,147,0.85)" }]}
-        >
+        {/* 헤더 */}
+        <View style={[styles.header, { backgroundColor: "rgba(62,79,147,0.85)" }]}>
           <View>
             <Text style={styles.headerWelcome}>환영합니다</Text>
             <Text style={styles.headerName}>{nick}님 🌙</Text>
           </View>
-
           <View style={styles.headerIconBox}>
             <Moon size={40} color="white" />
           </View>
         </View>
 
-        {/* ✅ 오늘의 수면 리포트 (3가지 항목만) */}
+        {/* 수면 리포트 */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>오늘의 수면 리포트</Text>
+          <Text style={styles.cardTitle}>오늘의 요약</Text>
 
           {/* 총 수면시간 */}
           <View style={styles.rowBetween}>
@@ -185,13 +161,13 @@ export default function HomeScreen() {
             </View>
             <Text style={styles.value}>
               {dashboard
-                ? `${dashboard.caffeine.type} / ${dashboard.caffeine.cups}잔 / ${dashboard.caffeine.mg}mg`
+                ? `${dashboard.caffeine.cups}잔 / ${dashboard.caffeine.mg}mg`
                 : "기록 없음"}
             </Text>
           </View>
         </View>
 
-        {/* ✅ AI 분석 */}
+        {/* AI 분석 */}
         <View style={[styles.card, { marginTop: 20 }]}>
           <Text style={styles.cardTitle}>AI 수면 분석</Text>
 

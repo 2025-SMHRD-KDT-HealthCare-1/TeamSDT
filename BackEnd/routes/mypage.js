@@ -2,7 +2,9 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db/database");
 
-
+/**
+ * 1) 사용자 정보 조회
+ */
 router.get("/user/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -23,7 +25,9 @@ router.get("/user/:id", async (req, res) => {
   }
 });
 
-
+/**
+ * 2) 사용자 정보 수정
+ */
 router.put("/user/update", async (req, res) => {
   const { user_id, nick, email, phone } = req.body;
 
@@ -40,24 +44,35 @@ router.put("/user/update", async (req, res) => {
   }
 });
 
-
+/**
+ * 3) 카페인 기록 조회  (🔥 IntakeTime → created_at 기준으로 정렬)
+ */
 router.get("/caffeine/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
     const [rows] = await db.execute(
-      "SELECT * FROM caffeine_logs WHERE user_id = ? ORDER BY created_at DESC",
+      `
+      SELECT Caffeine_ID, UserID, DrinkType, DrinkSize, 
+             Caffeine_Amount, IntakeTime, created_at
+      FROM CaffeineLog
+      WHERE UserID = ?
+      ORDER BY created_at DESC
+      `,
       [id]
     );
 
     res.json(rows);
 
   } catch (err) {
+    console.error("GET /caffeine error:", err);
     res.status(500).json({ message: "서버 오류", err });
   }
 });
 
-
+/**
+ * 4) 스크린타임 기록 조회 (기존 유지)
+ */
 router.get("/screentime/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -74,14 +89,95 @@ router.get("/screentime/:id", async (req, res) => {
   }
 });
 
+/**
+ * ⭐⭐⭐ 새 기능 추가 — 하루 기록 조회 API ⭐⭐⭐
+ * 수면 + 스크린타임 + 카페인 총합을 단순 표시용 데이터로 반환
+ */
+router.get("/day/:userId/:date", async (req, res) => {
+  const { userId, date } = req.params;
 
+  try {
+    /** ----------------------------
+     * 1) 수면 데이터 조회
+     * ---------------------------- */
+    const [[sleep]] = await db.execute(
+      `
+      SELECT TotalSleepTime 
+      FROM SleepRecord
+      WHERE UserID = ?
+      AND DateValue = ?
+      LIMIT 1
+      `,
+      [userId, date]
+    );
+
+    let sleepText = "기록 없음";
+    if (sleep?.TotalSleepTime != null) {
+      const total = sleep.TotalSleepTime;
+      const h = Math.floor(total / 60);
+      const m = total % 60;
+      sleepText = `${h}시간 ${m}분`;
+    }
+
+    /** ----------------------------
+     * 2) 스크린타임 조회
+     * ---------------------------- */
+    const [[screen]] = await db.execute(
+      `
+      SELECT Total_ScreenTime
+      FROM ScreenTimeRecord
+      WHERE UserID = ?
+      AND DateValue = ?
+      LIMIT 1
+      `,
+      [userId, date]
+    );
+
+    let screenText = "기록 없음";
+    if (screen?.Total_ScreenTime != null) {
+      const total = screen.Total_ScreenTime;
+      const h = Math.floor(total / 60);
+      const m = total % 60;
+      screenText = `${h}시간 ${m}분`;
+    }
+
+    /** ----------------------------
+     * 3) 카페인 총합 조회
+     * ---------------------------- */
+    const [[caffeine]] = await db.execute(
+      `
+      SELECT SUM(Caffeine_Amount) AS totalMg
+      FROM CaffeineLog
+      WHERE UserID = ?
+      AND DATE(IntakeTime) = ?
+      `,
+      [userId, date]
+    );
+
+    let caffeineText = caffeine?.totalMg ? `${caffeine.totalMg}mg` : "기록 없음";
+
+    return res.json({
+      sleep: sleepText,
+      screentime: screenText,
+      caffeine: caffeineText,
+    });
+
+  } catch (err) {
+    console.error("하루 기록 조회 오류:", err);
+    res.status(500).json({ message: "하루 기록 조회 오류" });
+  }
+});
+
+/**
+ * 5) 전체 데이터 삭제 (초기화)
+ */
 router.delete("/data/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    await db.execute("DELETE FROM caffeine_logs WHERE user_id = ?", [id]);
+    await db.execute("DELETE FROM CaffeineLog WHERE UserID = ?", [id]);
     await db.execute("DELETE FROM screentime_logs WHERE user_id = ?", [id]);
-    await db.execute("DELETE FROM sleep_logs WHERE user_id = ?", [id]);
+    await db.execute("DELETE FROM SleepRecord WHERE UserID = ?", [id]);
 
     res.json({ message: "데이터 초기화 완료" });
 

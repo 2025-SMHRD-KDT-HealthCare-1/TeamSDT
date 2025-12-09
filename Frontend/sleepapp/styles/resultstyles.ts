@@ -111,6 +111,15 @@ export default StyleSheet.create({
     marginBottom: 14,
   },
 
+  /* 🔥 추가된 부분 (오류 해결) */
+  aiSectionTitle: {
+    color: "#7aa2ff",
+    fontSize: 17,
+    fontWeight: "700",
+    marginTop: 18,
+    marginBottom: 6,
+  },
+
   aiText: {
     color: "#e0e6ff",
     fontSize: 15,
