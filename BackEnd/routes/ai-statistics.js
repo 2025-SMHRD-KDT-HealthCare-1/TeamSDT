@@ -8,7 +8,7 @@ router.post("/", (req, res) => {
   console.log("받은 데이터:", req.body);
 
   // OS에 따라 Python 명령 선택
-  const pythonCmd = process.platform === "win32" ? "python" : "python3";
+  const pythonCmd = process.platform === "win32" ? "py" : "python3";
   console.log("사용되는 Python 명령:", pythonCmd);
 
   try {

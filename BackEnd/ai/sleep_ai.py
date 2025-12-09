@@ -37,21 +37,21 @@ with open(AI_DIR / "docs.txt", "r", encoding="utf-8") as f:
 # --------------------------
 # 🔥 3) 임베딩 모델 로드 (1회)
 # --------------------------
-print("🚀 Embedding 모델 로딩 중...")
+print("[Embedding] 모델 로딩 중...")
 embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 vectors = embed_model.encode(sentences)
 
 index = faiss.IndexFlatL2(vectors.shape[1])
 index.add(np.array(vectors))
-print("✅ 임베딩 모델 준비됨")
+print("[Embedding] 준비됨")
 
 
 # --------------------------
 # 🔥 4) Reranker 로드 (1회)
 # --------------------------
-print("🚀 Reranker 로딩 중...")
+print("[Reranker] 로딩 중...")
 reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-print("✅ Reranker 준비됨")
+print("[Reranker] 준비됨")
 
 
 # --------------------------
