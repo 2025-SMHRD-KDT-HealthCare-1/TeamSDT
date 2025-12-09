@@ -10,7 +10,7 @@ router.get("/user/:id", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      "SELECT userid, nick, email, phone FROM users WHERE userid = ?",
+      "SELECT userid, nick, email, phone FROM Users WHERE userid = ?",
       [id]
     );
 
@@ -33,7 +33,7 @@ router.put("/user/update", async (req, res) => {
 
   try {
     await db.execute(
-      "UPDATE users SET nick = ?, email = ?, phone = ? WHERE userid = ?",
+      "UPDATE Users SET nick = ?, email = ?, phone = ? WHERE userid = ?",
       [nick, email, phone, userid]
     );
 

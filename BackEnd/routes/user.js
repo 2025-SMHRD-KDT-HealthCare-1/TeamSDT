@@ -10,7 +10,7 @@ router.post("/join", async (req, res) => {
 
   try {
     const [idRows] = await db.execute(
-      "SELECT userid FROM users WHERE userid = ?",
+      "SELECT userid FROM Users WHERE userid = ?",
       [userid]
     );
     if (idRows.length > 0) {
@@ -18,7 +18,7 @@ router.post("/join", async (req, res) => {
     }
 
     const [emailRows] = await db.execute(
-      "SELECT email FROM users WHERE email = ?",
+      "SELECT email FROM Users WHERE email = ?",
       [email]
     );
     if (emailRows.length > 0) {
@@ -28,7 +28,7 @@ router.post("/join", async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
 
     const sql =
-      "INSERT INTO users (userid, password, nick, email, phone) VALUES (?, ?, ?, ?, ?)";
+      "INSERT INTO Users (userid, password, nick, email, phone) VALUES (?, ?, ?, ?, ?)";
     await db.execute(sql, [userid, hashed, nick, email, phone]);
 
     return res.json({ message: "회원가입 성공" });
@@ -43,7 +43,7 @@ router.post("/login", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE userid = ?",
+      "SELECT * FROM Users WHERE userid = ?",
       [userid]
     );
 
@@ -79,7 +79,7 @@ router.post("/find-id", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      "SELECT userid FROM users WHERE email = ?",
+      "SELECT userid FROM Users WHERE email = ?",
       [email]
     );
 
@@ -110,7 +110,7 @@ router.post("/reset-password", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE userid = ? AND email = ?",
+      "SELECT * FROM Users WHERE userid = ? AND email = ?",
       [userid, email]
     );
 
@@ -122,7 +122,7 @@ router.post("/reset-password", async (req, res) => {
     const hashed = await bcrypt.hash(tempPassword, 10);
 
     await db.execute(
-      "UPDATE users SET password = ? WHERE userid = ?",
+      "UPDATE Users SET password = ? WHERE userid = ?",
       [hashed, userid]
     );
 
@@ -145,7 +145,7 @@ router.get("/check-id", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE userid = ?",
+      "SELECT * FROM Users WHERE userid = ?",
       [userid]
     );
 
@@ -164,7 +164,7 @@ router.get("/profile/:userid", async (req, res) => {
     const [rows] = await db.execute(
       `
       SELECT userid, nick, email, phone 
-      FROM users 
+      FROM Users 
       WHERE userid = ? AND is_deleted = 0
       `,
       [userid]
@@ -199,7 +199,7 @@ router.get("/me", async (req, res) => {
     const userid = decoded.userid;
 
     const [rows] = await db.execute(
-      "SELECT userid, nick, email, phone FROM users WHERE userid = ? AND is_deleted = 0",
+      "SELECT userid, nick, email, phone FROM Users WHERE userid = ? AND is_deleted = 0",
       [userid]
     );
 
@@ -220,7 +220,7 @@ router.delete("/delete/:userid", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE userid = ? AND is_deleted = 0",
+      "SELECT * FROM Users WHERE userid = ? AND is_deleted = 0",
       [userid]
     );
 
@@ -231,7 +231,7 @@ router.delete("/delete/:userid", async (req, res) => {
     }
 
     await db.execute(
-      "UPDATE users SET is_deleted = 1 WHERE userid = ?",
+      "UPDATE Users SET is_deleted = 1 WHERE userid = ?",
       [userid]
     );
 
