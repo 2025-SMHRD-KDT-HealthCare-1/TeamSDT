@@ -23,7 +23,7 @@ export default function HomeScreen() {
   // ✅ AI
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiAudioBase64, setAiAudioBase64] = useState<string | null>(null); // ✅ 다시 듣기용
+  const [aiAudioBase64, setAiAudioBase64] = useState<string | null>(null);
 
   // ✅ TTS 재생
   async function playBase64Audio(base64Audio?: string) {
@@ -93,8 +93,6 @@ export default function HomeScreen() {
             }),
           }
         );
-        
-        console.log(aiRes)
 
         const data = await aiRes.json();
         if (!isMounted) return;
@@ -102,10 +100,9 @@ export default function HomeScreen() {
         setAiText(data.text || "");
 
         if (data.audio_base64) {
-          setAiAudioBase64(data.audio_base64); // ✅ 다시 듣기 저장
-          playBase64Audio(data.audio_base64);  // ✅ 자동 1회 재생
+          setAiAudioBase64(data.audio_base64);
+          playBase64Audio(data.audio_base64);
         }
-
       } catch (err) {
         console.log("Home 초기 로드 에러:", err);
       } finally {
@@ -150,10 +147,11 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* ✅ 어제 수면 리포트 */}
+        {/* ✅ 오늘의 수면 리포트 (3가지 항목만) */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>오늘의 수면 리포트</Text>
 
+          {/* 총 수면시간 */}
           <View style={styles.rowBetween}>
             <View style={styles.rowLeft}>
               <Clock size={26} color="#7aa2ff" />
@@ -166,24 +164,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          <View style={styles.rowBetween}>
-            <Text style={styles.smallLabel}>잠든 시간</Text>
-            <Text style={styles.smallValue}>
-              {dashboard
-                ? `${dashboard.sleepTime.hours}시 ${dashboard.sleepTime.minutes}분`
-                : "기록 없음"}
-            </Text>
-          </View>
-
-          <View style={styles.rowBetween}>
-            <Text style={styles.smallLabel}>기상 시간</Text>
-            <Text style={styles.smallValue}>
-              {dashboard
-                ? `${dashboard.wakeTime.hours}시 ${dashboard.wakeTime.minutes}분`
-                : "기록 없음"}
-            </Text>
-          </View>
-
+          {/* 스마트폰 사용 */}
           <View style={styles.rowBetween}>
             <View style={styles.rowLeft}>
               <Smartphone size={24} color="#7aa2ff" />
@@ -196,6 +177,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
+          {/* 카페인 섭취 */}
           <View style={styles.rowBetween}>
             <View style={styles.rowLeft}>
               <Coffee size={24} color="#7aa2ff" />
@@ -209,7 +191,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* ✅ AI 분석 + 다시 듣기 버튼 */}
+        {/* ✅ AI 분석 */}
         <View style={[styles.card, { marginTop: 20 }]}>
           <Text style={styles.cardTitle}>AI 수면 분석</Text>
 

@@ -22,17 +22,18 @@ import api from "../api/apiconfig";
 import * as Notifications from "expo-notifications";
 
 import { logout } from "../logout";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface MyPageProps {
   userName: string;
 }
 
 export default function MyPage({ userName }: MyPageProps) {
-  const [selectedDate, setSelectedDate] = useState("");
+  const TODAY = new Date().toISOString().split("T")[0]; // ⭐ 오늘 날짜
+  const [selectedDate, setSelectedDate] = useState(TODAY); // ⭐ 기본 선택 날짜 오늘로
   const [dailyData, setDailyData] = useState<any>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  /** ⭐ 로그아웃 모달 상태 추가 */
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const [nick, setNick] = useState<string>(userName);
@@ -41,14 +42,67 @@ export default function MyPage({ userName }: MyPageProps) {
   const [allowNoti, setAllowNoti] = useState(false);
 
   const dummyData: any = {
-    "2025-02-01": { sleep: "7시간 30분", screentime: "3시간 15분", caffeine: "150mg" },
-    "2025-02-05": { sleep: "6시간 20분", screentime: "2시간 40분", caffeine: "없음" },
+    "2025-02-01": { sleep: "7시간 30분", screentime: "3시간 15분" },
+    "2025-02-05": { sleep: "6시간 20분", screentime: "2시간 40분" },
   };
 
+  // ⭐ 앱 진입 시 오늘 기록 자동 표시
+  useEffect(() => {
+    loadInitialDailyData();
+  }, []);
+
+  const loadInitialDailyData = () => {
+    setDailyData({
+      sleep: dummyData[TODAY]?.sleep || null,
+      screentime: dummyData[TODAY]?.screentime || null,
+      caffeine: null,
+    });
+    loadDailyCaffeine(TODAY);
+  };
+
+  // ⭐ 날짜 선택 시 데이터 변경
   useEffect(() => {
     if (!selectedDate) return;
-    setDailyData(dummyData[selectedDate] || null);
+
+    setDailyData({
+      sleep: dummyData[selectedDate]?.sleep || null,
+      screentime: dummyData[selectedDate]?.screentime || null,
+      caffeine: null,
+    });
+
+    loadDailyCaffeine(selectedDate);
   }, [selectedDate]);
+
+  // ⭐ 날짜별 카페인 불러오기
+  const loadDailyCaffeine = async (date: string) => {
+    try {
+      const saved = await AsyncStorage.getItem("daily_caffeine_records");
+      if (!saved) {
+        setDailyData((prev: any) => ({ ...prev, caffeine: "기록 없음" }));
+        return;
+      }
+
+      const data = JSON.parse(saved);
+      const records = data[date];
+
+      if (!records || records.length === 0) {
+        setDailyData((prev: any) => ({ ...prev, caffeine: "기록 없음" }));
+        return;
+      }
+
+      const caffeineTotal = records.reduce(
+        (sum: number, r: any) => sum + r.caffeine,
+        0
+      );
+
+      setDailyData((prev: any) => ({
+        ...prev,
+        caffeine: `${caffeineTotal}mg`,
+      }));
+    } catch (err) {
+      console.log("카페인 로드 오류:", err);
+    }
+  };
 
   useEffect(() => {
     fetchMyInfo();
@@ -143,6 +197,7 @@ export default function MyPage({ userName }: MyPageProps) {
           <Text style={styles.profileDesc}>편안한 수면을 즐기고 계세요</Text>
         </View>
 
+        {/* 캘린더 */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <CalendarIcon size={26} color="#5b6fb9" />
@@ -166,19 +221,28 @@ export default function MyPage({ userName }: MyPageProps) {
           />
         </View>
 
+        {/* 하루 기록 */}
         <View style={styles.dayRecordCard}>
           <Text style={styles.dayRecordTitle}>📅 하루 기록</Text>
+
           {!dailyData ? (
             <Text style={styles.noDataText}>기록이 없습니다.</Text>
           ) : (
             <>
-              <Text style={styles.dayRecordText}>수면 시간: {dailyData.sleep}</Text>
-              <Text style={styles.dayRecordText}>스크린타임: {dailyData.screentime}</Text>
-              <Text style={styles.dayRecordText}>카페인: {dailyData.caffeine}</Text>
+              <Text style={styles.dayRecordText}>
+                수면 시간: {dailyData.sleep || "기록 없음"}
+              </Text>
+              <Text style={styles.dayRecordText}>
+                스크린타임: {dailyData.screentime || "기록 없음"}
+              </Text>
+              <Text style={styles.dayRecordText}>
+                카페인: {dailyData.caffeine || "기록 없음"}
+              </Text>
             </>
           )}
         </View>
 
+        {/* 알림 설정 */}
         <View style={styles.card}>
           <View style={styles.rowButton}>
             <View style={styles.rowLeft}>
@@ -195,9 +259,8 @@ export default function MyPage({ userName }: MyPageProps) {
           </View>
         </View>
 
+        {/* 로그아웃/탈퇴 */}
         <View style={styles.card}>
-
-          {/* ⭐ 로그아웃 모달 열기 버튼 ⭐ */}
           <TouchableOpacity
             onPress={() => setShowLogoutModal(true)}
             style={styles.rowButtonBorder}
@@ -226,6 +289,7 @@ export default function MyPage({ userName }: MyPageProps) {
         </View>
       </View>
 
+      {/* 로그아웃 모달 */}
       <Modal visible={showLogoutModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
@@ -251,6 +315,7 @@ export default function MyPage({ userName }: MyPageProps) {
         </View>
       </Modal>
 
+      {/* 회원탈퇴 모달 */}
       <Modal visible={showDeleteModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>

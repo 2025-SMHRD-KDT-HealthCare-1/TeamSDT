@@ -1,16 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db/database");
+const axios = require("axios"); // ⭐ AI 호출용 추가
 
 /**
- * ✅ 1️⃣ 수면 측정 시작 (수동 - 테스트/예비용)
- * measure → sleeptimer 진입 시
+ * 1️⃣ 수면 측정 시작
  */
 router.post("/start", async (req, res) => {
   const { userId, sleepTime, wakeTime } = req.body;
 
   try {
-    // ✅ 아직 안 끝난 수면 세션이 있는지 체크 (중복 방지)
     const [exists] = await db.execute(
       `SELECT SleepRecord_ID 
        FROM SleepRecord 
@@ -19,7 +18,6 @@ router.post("/start", async (req, res) => {
       [userId]
     );
 
-    // ✅ 진행 중인 수면이 없을 때만 INSERT
     if (exists.length === 0) {
       await db.execute(
         `INSERT INTO SleepRecord 
@@ -29,7 +27,6 @@ router.post("/start", async (req, res) => {
       );
     }
 
-    // ✅ 수면 설정 저장 (목표 취침 / 목표 기상)
     await db.execute(
       `REPLACE INTO SleepSetting 
        (SleepSetting_ID, UserID, SleepTime, WakeTime)
@@ -45,7 +42,7 @@ router.post("/start", async (req, res) => {
 });
 
 /**
- * ✅ 2️⃣ 수면 측정 종료 (수동 기상)
+ * 2️⃣ 수면 측정 종료
  */
 router.post("/end", async (req, res) => {
   const { userId } = req.body;
@@ -90,7 +87,7 @@ router.post("/end", async (req, res) => {
 });
 
 /**
- * ✅ 3️⃣ result 화면용 수면 데이터 (최신 1건)
+ * 3️⃣ result 화면용 최신 기록
  */
 router.get("/result/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -113,14 +110,12 @@ router.get("/result/:userId", async (req, res) => {
 });
 
 /**
- * ✅ ✅ ✅ 4️⃣ 자동 수면 판정 엔진 (스크린타임 기반)
- * POST /sleep/screen-event
+ * 4️⃣ 자동 수면 판정 엔진
  */
 router.post("/screen-event", async (req, res) => {
   const { userId, type, timestamp } = req.body;
 
   try {
-    // ✅ 상태 없으면 생성
     const [[state]] = await db.execute(
       `SELECT * FROM SleepDetectionState WHERE UserID = ?`,
       [userId]
@@ -146,7 +141,6 @@ router.post("/screen-event", async (req, res) => {
       [userId]
     );
 
-    /* ✅ SCREEN OFF */
     if (type === "SCREEN_OFF") {
       await db.execute(
         `UPDATE SleepDetectionState
@@ -158,14 +152,12 @@ router.post("/screen-event", async (req, res) => {
       return res.json({ message: "SCREEN_OFF 저장됨" });
     }
 
-    /* ✅ SCREEN ON */
     if (type === "SCREEN_ON" && current.ScreenOffAt) {
       const offTime = new Date(current.ScreenOffAt);
       const onTime = new Date(timestamp);
 
-      const diffMin = (onTime - offTime) / 1000 / 60;
+      const diffMin = (onTime - offTime) / 60000;
 
-      // ✅ 2시간 이상 OFF 유지 → 수면 시작 판정
       if (diffMin >= 120 && current.IsSleeping === 0) {
         const sleepTime = setting?.SleepTime;
         const offMin = offTime.getHours() * 60 + offTime.getMinutes();
@@ -175,7 +167,6 @@ router.post("/screen-event", async (req, res) => {
           : 0;
 
         if (offMin >= sleepMin) {
-          // ✅ 중복 방지
           const [exists] = await db.execute(
             `SELECT SleepRecord_ID
              FROM SleepRecord
@@ -202,7 +193,6 @@ router.post("/screen-event", async (req, res) => {
         }
       }
 
-      // ✅ ✅ ✅ 무조건 기상 처리 (IsSleeping 조건 제거)
       const [[latest]] = await db.execute(
         `SELECT SleepRecord_ID, SleepStart
          FROM SleepRecord
@@ -247,8 +237,7 @@ router.post("/screen-event", async (req, res) => {
 });
 
 /**
- * ✅ ✅ ✅ 5️⃣ Result 그래프용 수면 히스토리 API
- * GET /sleep/history/:userId?period=day|week|month|all
+ * 5️⃣ Result 그래프 + AI 분석 API
  */
 router.get("/history/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -264,7 +253,6 @@ router.get("/history/:userId", async (req, res) => {
     } else if (period === "month") {
       dateCondition = "AND DateValue >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
     }
-    // ✅ all 은 조건 없음
 
     const [rows] = await db.execute(
       `
@@ -280,15 +268,41 @@ router.get("/history/:userId", async (req, res) => {
       [userId]
     );
 
-    // ✅ 프론트 그래프용 데이터 가공
     const graph = rows.map((row) => ({
       label: `${row.DateValue.getMonth() + 1}/${row.DateValue.getDate()}`,
-      sleep: Number((row.TotalSleepTime / 60).toFixed(1)), // 분 → 시간
+      sleep: Number((row.TotalSleepTime / 60).toFixed(1)),
     }));
+
+    let aiResult = null;
+
+    if (rows.length > 0) {
+      const latest = rows[rows.length - 1];
+      const totalSleepHour = Number((latest.TotalSleepTime / 60).toFixed(1));
+
+      const [[user]] = await db.execute(
+        `SELECT Nick FROM User WHERE UserID = ?`,
+        [userId]
+      );
+
+      const aiResponse = await axios.post("http://localhost:3000/ai", {
+        user_name: user?.Nick ?? "사용자",
+        caffeine: 0,
+        screen_time: 0,
+        sleep_time: totalSleepHour,
+        style: "친근하게",
+      });
+
+      aiResult = {
+        summary: aiResponse.data.text,
+        problem: "",
+        effect: "",
+        solution: "",
+      };
+    }
 
     res.json({
       graph,
-      ai: null, // ✅ 나중에 AI 연결용 자리 유지
+      ai: aiResult,
     });
   } catch (err) {
     console.error("sleep history error:", err);

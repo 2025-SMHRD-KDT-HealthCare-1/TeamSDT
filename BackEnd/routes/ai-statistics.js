@@ -3,63 +3,64 @@ const router = express.Router();
 const { spawn } = require("child_process");
 const path = require("path");
 
-// GET 테스트용
-router.get("/", (req, res) => {
-  res.send("AI 통계 라우터 정상 동작 중!");
-});
-
-// POST → Python AI 실행 (STDIN 방식)
 router.post("/", (req, res) => {
   console.log("/ai 라우터 진입!");
+
+  // ✅ 여기 ↓↓↓ 가장 위에 넣기 (Python 실행 테스트)
+  const pythonCmd = process.platform === "win32" ? "python" : "python3";
+  console.log("실행된 Python 경로:", pythonCmd);
+
+  const testPy = spawn(pythonCmd, ["-c", "import sys; print(sys.executable)"]);
+  testPy.stdout.on("data", (d) => {
+    console.log("NODE가 실행한 Python:", d.toString());
+  });
   console.log("받은 데이터:", req.body);
 
   try {
     const pythonFile = path.join(__dirname, "../ai/sleep_ai_wrapper.py");
 
-    // Python 3.11 고정 실행
-    const py = spawn("py", ["-3.11", pythonFile]);
+    // ✔ Python 명령 자동 선택
+    const pythonCmd = process.platform === "win32" ? "python" : "python3";
 
-    // JSON → Python stdin 으로 전달
+    const py = spawn(pythonCmd, [pythonFile]);
+
     py.stdin.write(JSON.stringify(req.body));
     py.stdin.end();
 
     let result = "";
+    let errLog = "";
 
     py.stdout.on("data", (data) => {
       result += data.toString();
     });
 
     py.stderr.on("data", (data) => {
-      console.error("stderr:", data.toString());
-    });
-
-    py.stderr.on("data", (err) => {
-      console.error("Python stderr:", err.toString());
+      errLog += data.toString();
     });
 
     py.on("close", (code) => {
-      console.log("Python 종료:", code);
-      console.log("Python Raw Output:", result);
+      console.log("Python 종료 코드:", code);
+
+      if (errLog.trim().length > 0) {
+        console.log("⚠ Python stderr:", errLog);
+      }
 
       if (code !== 0) {
         return res.status(500).json({ error: "Python process error" });
       }
 
       try {
-        // 이제 result 자체가 JSON 문자열이기 때문에 바로 파싱 가능
         const jsonResult = JSON.parse(result);
-        return res.json(jsonResult);
+        res.json(jsonResult);
       } catch (err) {
-        console.error("JSON 파싱 오류:", err);
-        return res.status(500).json({ error: "JSON parsing failed" });
+        console.error("❌ JSON 파싱 오류:", err);
+        console.log("📌 Raw Output:", result);
+        res.status(500).json({ error: "JSON parsing failed" });
       }
     });
   } catch (err) {
     console.error("서버 오류:", err);
-    res.status(500).json({
-      success: false,
-      error: "서버 내부 오류",
-    });
+    res.status(500).json({ success: false, error: "서버 내부 오류" });
   }
 });
 
