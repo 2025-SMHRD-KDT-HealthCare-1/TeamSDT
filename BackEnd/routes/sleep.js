@@ -201,6 +201,26 @@ router.post("/screen-event", async (req, res) => {
           [userId]
         );
 
+        // ✅ 1️⃣ 코골이 원본 AI 불러오기
+        const aiRaw = await axios.get("http://localhost:3000/ai-json");
+
+        // ✅ 2️⃣ Gemini 요약 실행
+        const aiGemini = await axios.get("http://localhost:3000/ai-gemini");
+
+        // ✅ 3️⃣ 수면 기록에 같이 저장
+        await db.execute(
+            `UPDATE SleepRecord
+            SET 
+              SnoringResult = ?,
+              AI_Summary = ?
+            WHERE SleepRecord_ID = ?`,
+          [
+            aiRaw.data.prediction,
+            aiGemini.data.ai_comment,
+            latest.SleepRecord_ID
+          ]
+       );
+
         if (latest) {
           const [sh, sm] = latest.SleepStart.split(":").map(Number);
           const startMin = sh * 60 + sm;
