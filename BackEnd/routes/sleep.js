@@ -46,6 +46,15 @@ router.post("/start", async (req, res) => {
       [userId, sleepTime, wakeTime]
     );
 
+    await db.execute(
+      `UPDATE SleepDetectionState
+       SET IsSleeping = 1,
+           ScreenOffAt = NULL,
+           WakeCandidateAt = NULL
+       WHERE UserID = ?`,
+      [userId]
+    );
+
     res.json({ success: true });
   } catch (err) {
     console.error("sleep start error:", err);
@@ -128,6 +137,7 @@ router.post("/screen-event", async (req, res) => {
   const { userId, type, timestamp } = req.body;
 
   try {
+    // ✅ 상태 없으면 생성
     const [[state]] = await db.execute(
       `SELECT * FROM SleepDetectionState WHERE UserID = ?`,
       [userId]
@@ -135,8 +145,8 @@ router.post("/screen-event", async (req, res) => {
 
     if (!state) {
       await db.execute(
-        `INSERT INTO SleepDetectionState (UserID, ScreenOffAt, IsSleeping)
-         VALUES (?, NULL, 0)`,
+        `INSERT INTO SleepDetectionState (UserID, ScreenOffAt, IsSleeping, WakeCandidateAt)
+         VALUES (?, NULL, 1, NULL)`,
         [userId]
       );
     }
@@ -146,107 +156,89 @@ router.post("/screen-event", async (req, res) => {
       [userId]
     );
 
-    const [[setting]] = await db.execute(
-      `SELECT SleepTime, WakeTime
-       FROM SleepSetting
-       WHERE UserID = ?`,
-      [userId]
-    );
-
+    /* SCREEN OFF = 잠들었다 */
     if (type === "SCREEN_OFF") {
-      await db.execute(
-        `UPDATE SleepDetectionState
-         SET ScreenOffAt = ?, IsSleeping = 0
-         WHERE UserID = ?`,
-        [timestamp, userId]
-      );
+  await db.execute(
+    `UPDATE SleepDetectionState
+     SET ScreenOffAt = ?, 
+         WakeCandidateAt = NULL,
+         IsSleeping = 1          
+     WHERE UserID = ?`,
+    [timestamp, userId]
+  );
 
-      return res.json({ message: "SCREEN_OFF 저장됨" });
-    }
-
-    if (type === "SCREEN_ON" && current.ScreenOffAt) {
-      const offTime = new Date(current.ScreenOffAt);
+  return res.json({ message: "SCREEN_OFF 저장됨 (수면 유지)" });
+}
+    /* SCREEN ON 처리 */
+    if (type === "SCREEN_ON") {
       const onTime = new Date(timestamp);
 
-      const diffMin = (onTime - offTime) / 60000;
+      // 1️⃣ 기상 후보가 아직 없으면 → 후보 등록만
+      if (!current.WakeCandidateAt) {
+        await db.execute(
+          `UPDATE SleepDetectionState
+           SET WakeCandidateAt = ?
+           WHERE UserID = ?`,
+          [timestamp, userId]
+        );
 
-      if (diffMin >= 120 && current.IsSleeping === 0) {
-        const sleepTime = setting?.SleepTime;
-        const offMin = offTime.getHours() * 60 + offTime.getMinutes();
+        return res.json({ message: "기상 후보 등록 (아직 기상 아님)" });
+      }
 
-        const sleepMin = sleepTime
-          ? Number(sleepTime.split(":")[0]) * 60 + Number(sleepTime.split(":")[1])
-          : 0;
+      // 2️⃣ 기상 후보가 이미 있으면 → 3분 유지됐는지 검사
+      const candidateTime = new Date(current.WakeCandidateAt);
+      const diffMin = (onTime - candidateTime) / 60000;
 
-        if (offMin >= sleepMin) {
-          const [exists] = await db.execute(
-            `SELECT SleepRecord_ID
-             FROM SleepRecord
-             WHERE UserID = ?
-               AND SleepEnd IS NULL`,
+      // 3분 이상 유지 → 진짜 기상 처리
+      if (diffMin >= 3) {
+        const [[latest]] = await db.execute(
+          `SELECT SleepRecord_ID, SleepStart
+           FROM SleepRecord
+           WHERE UserID = ?
+             AND SleepEnd IS NULL
+           ORDER BY DateValue DESC
+           LIMIT 1`,
+          [userId]
+        );
+
+        if (latest) {
+          const [sh, sm] = latest.SleepStart.split(":").map(Number);
+          const startMin = sh * 60 + sm;
+          const endMin = onTime.getHours() * 60 + onTime.getMinutes();
+
+          let diff = endMin - startMin;
+          if (diff < 0) diff += 1440;
+
+          await db.execute(
+            `UPDATE SleepRecord
+             SET SleepEnd = ?, TotalSleepTime = ?
+             WHERE SleepRecord_ID = ?`,
+            [onTime.toTimeString().slice(0, 5), diff, latest.SleepRecord_ID]
+          );
+
+          await db.execute(
+            `UPDATE SleepDetectionState
+             SET WakeCandidateAt = NULL,
+                 ScreenOffAt = NULL,
+                 IsSleeping = 0
+             WHERE UserID = ?`,
             [userId]
           );
 
-          if (exists.length === 0) {
-            await db.execute(
-              `INSERT INTO SleepRecord
-               (SleepRecord_ID, UserID, DateValue, TotalSleepTime, SleepStart, SleepEnd, Caffeine_Effect, RunningTime)
-               VALUES (UUID(), ?, CURDATE(), 0, ?, NULL, 0, '')`,
-              [userId, offTime.toTimeString().slice(0, 5)]
-            );
-
-            await db.execute(
-              `UPDATE SleepDetectionState
-               SET IsSleeping = 1
-               WHERE UserID = ?`,
-              [userId]
-            );
-          }
+          return res.json({ message: "✅ 3분 유지 → 기상 처리 완료" });
         }
       }
 
-      const [[latest]] = await db.execute(
-        `SELECT SleepRecord_ID, SleepStart
-         FROM SleepRecord
-         WHERE UserID = ?
-           AND SleepEnd IS NULL
-         ORDER BY DateValue DESC
-         LIMIT 1`,
-        [userId]
-      );
-
-      if (latest) {
-        const [sh, sm] = latest.SleepStart.split(":").map(Number);
-        const startMin = sh * 60 + sm;
-        const endMin = onTime.getHours() * 60 + onTime.getMinutes();
-
-        let diff = endMin - startMin;
-        if (diff < 0) diff += 1440;
-
-        await db.execute(
-          `UPDATE SleepRecord
-           SET SleepEnd = ?, TotalSleepTime = ?
-           WHERE SleepRecord_ID = ?`,
-          [onTime.toTimeString().slice(0, 5), diff, latest.SleepRecord_ID]
-        );
-
-        await db.execute(
-          `UPDATE SleepDetectionState
-           SET IsSleeping = 0, ScreenOffAt = NULL
-           WHERE UserID = ?`,
-          [userId]
-        );
-      }
-
-      return res.json({ message: "SCREEN_ON 처리 완료" });
+      return res.json({ message: "아직 3분 안 됨 → 기상 아님" });
     }
 
-    res.json({ message: "이벤트 무시됨" });
+    return res.json({ message: "이벤트 무시됨" });
   } catch (err) {
     console.error("screen-event error:", err);
     res.status(500).json({ message: "스크린 이벤트 처리 오류" });
   }
 });
+
 
 /**
  * 5️⃣ 히스토리 + AI 분석
