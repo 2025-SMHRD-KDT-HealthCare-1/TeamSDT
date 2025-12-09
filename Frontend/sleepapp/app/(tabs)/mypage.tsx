@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Modal,
   Alert,
   Switch,
 } from "react-native";
@@ -37,16 +36,16 @@ export default function MyPage({ userName }: MyPageProps) {
   const [user, setUser] = useState<any>(null);
   const [allowNoti, setAllowNoti] = useState(false);
 
-  // ⭐ 사용자 정보 로드
+  // ✅ 사용자 정보 로드
   useEffect(() => {
     fetchMyInfo();
   }, []);
 
-  // ✅ ✅ ✅ 하루 기록은 user 로드 완료 후 1번만 호출
+  // ✅ 날짜 or 유저 바뀌면 하루기록 갱신
   useEffect(() => {
     if (!user?.user_id) return;
-    loadDailyAll();
-  }, [user]);
+    loadDailyAll(selectedDate);
+  }, [selectedDate, user]);
 
   const fetchMyInfo = async () => {
     try {
@@ -59,16 +58,16 @@ export default function MyPage({ userName }: MyPageProps) {
   };
 
   /**
-   * ✅ ✅ ✅ 하루 기록 통합 API (백엔드 /mypage/day/:userId 기준)
-   * ✅ 다른 기능 절대 미침범 ❌
+   * ✅ ✅ ✅ 날짜 기반 하루 기록 API 연동
+   * GET /mypage/day/:userId/:date
    */
-  const loadDailyAll = async () => {
+  const loadDailyAll = async (date: string) => {
     try {
       if (!user?.user_id) return;
 
       const userId = user.user_id;
 
-      const res = await api.get(`/mypage/day/${userId}`);
+      const res = await api.get(`/mypage/day/${userId}/${date}`);
       const data = res.data;
 
       setDailyData({
@@ -129,6 +128,7 @@ export default function MyPage({ userName }: MyPageProps) {
 
   return (
     <ScrollView style={styles.container}>
+      {/* 별 배경 */}
       <View style={styles.starsContainer}>
         {Array.from({ length: 80 }).map((_, i) => (
           <View

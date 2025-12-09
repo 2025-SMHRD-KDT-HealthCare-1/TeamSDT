@@ -93,21 +93,21 @@ router.get("/screentime/:id", async (req, res) => {
  * ⭐⭐⭐ 새 기능 추가 — 하루 기록 조회 API ⭐⭐⭐
  * 수면 + 스크린타임 + 카페인 총합을 단순 표시용 데이터로 반환
  */
-router.get("/day/:userId", async (req, res) => {
-  const { userId } = req.params;
+
+router.get("/day/:userId/:date", async (req, res) => {
+  const { userId, date } = req.params;
 
   try {
-    // ✅ 1) 수면 (created_at 기준 오늘)
+    // ✅ 1) 수면 (DateValue 기준)
     const [[sleep]] = await db.execute(
       `
       SELECT TotalSleepTime
       FROM SleepRecord
       WHERE UserID = ?
-      AND DATE(created_at) = CURDATE()
-      ORDER BY created_at DESC
+      AND DateValue = ?
       LIMIT 1
       `,
-      [userId]
+      [userId, date]
     );
 
     let sleepText = "기록 없음";
@@ -117,17 +117,16 @@ router.get("/day/:userId", async (req, res) => {
       sleepText = `${h}시간 ${m}분`;
     }
 
-    // ✅ 2) 스크린타임 (created_at 기준 오늘)
+    // ✅ 2) 스크린타임 (ScreenTimeRecord + DateValue)
     const [[screen]] = await db.execute(
       `
       SELECT Total_ScreenTime
       FROM ScreenTimeRecord
       WHERE UserID = ?
-      AND DATE(created_at) = CURDATE()
-      ORDER BY created_at DESC
+      AND DateValue = ?
       LIMIT 1
       `,
-      [userId]
+      [userId, date]
     );
 
     let screenText = "기록 없음";
@@ -137,28 +136,29 @@ router.get("/day/:userId", async (req, res) => {
       screenText = `${h}시간 ${m}분`;
     }
 
-    // ✅ 3) 카페인 (created_at 기준 오늘)
+    // ✅ 3) 카페인 (IntakeTime 날짜 기준 SUM)
     const [[caffeine]] = await db.execute(
       `
       SELECT SUM(Caffeine_Amount) AS totalMg
       FROM CaffeineLog
       WHERE UserID = ?
-      AND DATE(created_at) = CURDATE()
+      AND DATE(IntakeTime) = ?
       `,
-      [userId]
+      [userId, date]
     );
 
-    let caffeineText = caffeine?.totalMg ? `${caffeine.totalMg}mg` : "기록 없음";
+    let caffeineText = caffeine?.totalMg
+      ? `${caffeine.totalMg}mg`
+      : "기록 없음";
 
     res.json({
       sleep: sleepText,
       screentime: screenText,
       caffeine: caffeineText,
     });
-
   } catch (err) {
-    console.error("하루 기록 조회 오류:", err);
-    res.status(500).json({ message: "하루 기록 조회 오류" });
+    console.error("날짜별 하루기록 조회 오류:", err);
+    res.status(500).json({ message: "날짜별 하루기록 조회 오류" });
   }
 });
 
