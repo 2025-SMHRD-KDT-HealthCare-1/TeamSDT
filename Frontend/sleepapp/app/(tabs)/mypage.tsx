@@ -32,12 +32,9 @@ export default function MyPage({ userName }: MyPageProps) {
   const [selectedDate, setSelectedDate] = useState(TODAY);
   const [dailyData, setDailyData] = useState<any>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
   const [nick, setNick] = useState<string>(userName);
   const [user, setUser] = useState<any>(null);
-
   const [allowNoti, setAllowNoti] = useState(false);
 
   // ⭐ 사용자 정보 로드
@@ -45,10 +42,11 @@ export default function MyPage({ userName }: MyPageProps) {
     fetchMyInfo();
   }, []);
 
+  // ✅ ✅ ✅ 하루 기록은 user 로드 완료 후 1번만 호출
   useEffect(() => {
     if (!user?.user_id) return;
-    loadDailyAll(selectedDate); // 날짜가 바뀔 때마다 재호출
-  }, [selectedDate, user]);
+    loadDailyAll();
+  }, [user]);
 
   const fetchMyInfo = async () => {
     try {
@@ -61,46 +59,22 @@ export default function MyPage({ userName }: MyPageProps) {
   };
 
   /**
-   * ⭐⭐⭐ 하루 데이터 불러오기
-   * sleep.js       → GET /sleep/daily/:userId/:date       → 수면
-   * screen.js      → GET /screentime/day/:userId/:date    → 스크린타임
-   * caffeine.js    → GET /caffeine/simple/:userId/:date   → 카페인
+   * ✅ ✅ ✅ 하루 기록 통합 API (백엔드 /mypage/day/:userId 기준)
+   * ✅ 다른 기능 절대 미침범 ❌
    */
-  const loadDailyAll = async (date: string) => {
+  const loadDailyAll = async () => {
     try {
       if (!user?.user_id) return;
 
       const userId = user.user_id;
 
-      // 📌 1) 수면 데이터
-      const sleepRes = await api.get(`/sleep/daily/${userId}/${date}`);
-      const sleepData = sleepRes.data;
-      const sleep = sleepData
-        ? `${Math.floor(sleepData.TotalSleepTime / 60)}시간 ${
-            sleepData.TotalSleepTime % 60
-          }분`
-        : "기록 없음";
+      const res = await api.get(`/mypage/day/${userId}`);
+      const data = res.data;
 
-      // 📌 2) 스크린타임
-      const screenRes = await api.get(`/screentime/day/${userId}/${date}`);
-      const screenData = screenRes.data;
-      let screentime = "기록 없음";
-
-      if (screenData && screenData.total !== undefined) {
-        const h = Math.floor(screenData.total / 60);
-        const m = screenData.total % 60;
-        screentime = `${h}시간 ${m}분`;
-      }
-
-      // 📌 3) 카페인
-      const cafRes = await api.get(`/caffeine/simple/${userId}/${date}`);
-      const caffeine = cafRes.data?.caffeine ?? "기록 없음";
-
-      // 📌 최종 합치기
       setDailyData({
-        sleep,
-        screentime,
-        caffeine,
+        sleep: data.sleep ?? "기록 없음",
+        screentime: data.screentime ?? "기록 없음",
+        caffeine: data.caffeine ?? "기록 없음",
       });
     } catch (err) {
       console.log("하루 기록 불러오기 오류:", err);
@@ -155,7 +129,6 @@ export default function MyPage({ userName }: MyPageProps) {
 
   return (
     <ScrollView style={styles.container}>
-      {/* ⭐ 별 배경 */}
       <View style={styles.starsContainer}>
         {Array.from({ length: 80 }).map((_, i) => (
           <View
@@ -212,7 +185,7 @@ export default function MyPage({ userName }: MyPageProps) {
           />
         </View>
 
-        {/* 하루 기록 */}
+        {/* ✅ ✅ ✅ 하루 기록 */}
         <View style={styles.dayRecordCard}>
           <Text style={styles.dayRecordTitle}>📅 하루 기록</Text>
 
