@@ -10,7 +10,7 @@ router.get("/user/:id", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      "SELECT user_id, nick, email, phone FROM users WHERE user_id = ?",
+      "SELECT userid, nick, email, phone FROM users WHERE userid = ?",
       [id]
     );
 
@@ -29,12 +29,12 @@ router.get("/user/:id", async (req, res) => {
  * 2) 사용자 정보 수정
  */
 router.put("/user/update", async (req, res) => {
-  const { user_id, nick, email, phone } = req.body;
+  const { userid, nick, email, phone } = req.body;
 
   try {
     await db.execute(
-      "UPDATE users SET nick = ?, email = ?, phone = ? WHERE user_id = ?",
-      [nick, email, phone, user_id]
+      "UPDATE users SET nick = ?, email = ?, phone = ? WHERE userid = ?",
+      [nick, email, phone, userid]
     );
 
     res.json({ message: "회원 정보 수정 완료" });
@@ -78,7 +78,7 @@ router.get("/screentime/:id", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      "SELECT * FROM screentime_logs WHERE user_id = ? ORDER BY date DESC",
+      "SELECT * FROM screentime_logs WHERE userid = ? ORDER BY date DESC",
       [id]
     );
 
@@ -171,7 +171,7 @@ router.delete("/data/:id", async (req, res) => {
 
   try {
     await db.execute("DELETE FROM CaffeineLog WHERE userid = ?", [id]);
-    await db.execute("DELETE FROM screentime_logs WHERE user_id = ?", [id]);
+    await db.execute("DELETE FROM screentime_logs WHERE userid = ?", [id]);
     await db.execute("DELETE FROM SleepRecord WHERE userid = ?", [id]);
 
     res.json({ message: "데이터 초기화 완료" });

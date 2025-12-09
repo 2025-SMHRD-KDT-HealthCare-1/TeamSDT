@@ -43,7 +43,7 @@ export default function MyPage({ userName }: MyPageProps) {
 
   // ✅ 날짜 or 유저 바뀌면 하루기록 갱신
   useEffect(() => {
-    if (!user?.user_id) return;
+    if (!user?.userid) return;
     loadDailyAll(selectedDate);
   }, [selectedDate, user]);
 
@@ -63,9 +63,9 @@ export default function MyPage({ userName }: MyPageProps) {
    */
   const loadDailyAll = async (date: string) => {
     try {
-      if (!user?.user_id) return;
+      if (!user?.userid) return;
 
-      const userid = user.user_id;
+      const userid = user.userid;
 
       const res = await api.get(`/mypage/day/${userid}/${date}`);
       const data = res.data;
@@ -110,12 +110,12 @@ export default function MyPage({ userName }: MyPageProps) {
 
   const handleDeleteAccount = async () => {
     try {
-      if (!user?.user_id) {
+      if (!user?.userid) {
         Alert.alert("오류", "유저 정보를 불러오지 못했습니다.");
         return;
       }
 
-      const res = await api.delete(`/user/delete/${user.user_id}`);
+      const res = await api.delete(`/user/delete/${user.userid}`);
       console.log("회원탈퇴 완료:", res.data);
 
       Alert.alert("탈퇴 완료", "회원탈퇴가 완료되었습니다.");

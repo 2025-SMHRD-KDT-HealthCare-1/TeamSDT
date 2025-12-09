@@ -30,7 +30,7 @@ export default function Join() {
     if (!userid.trim()) return Alert.alert("아이디를 입력하세요");
 
     try {
-      const res = await api.get(`/auth/check-id?user_id=${userid}`);
+      const res = await api.get(`/auth/check-id?userid=${userid}`);
       console.log("중복확인 응답:", res.data);
 
       if (res.data.exists) {
@@ -57,7 +57,7 @@ export default function Join() {
 
     try {
       const res = await api.post("/auth/join", {
-        user_id: userid,
+        userid: userid,
         password,
         nick,
         email,

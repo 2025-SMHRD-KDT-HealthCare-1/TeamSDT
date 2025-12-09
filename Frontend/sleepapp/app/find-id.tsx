@@ -17,8 +17,8 @@ export default function FindId() {
     try {
       const res = await api.post("/user/find-id", { email });
 
-      if (res.data.user_id) {
-        Alert.alert("아이디 조회 성공", `회원님의 아이디는 "${res.data.user_id}" 입니다.`);
+      if (res.data.userid) {
+        Alert.alert("아이디 조회 성공", `회원님의 아이디는 "${res.data.userid}" 입니다.`);
       } else {
         Alert.alert("오류", res.data.message || "아이디를 찾을 수 없습니다.");
       }

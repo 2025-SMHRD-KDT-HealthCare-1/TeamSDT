@@ -17,7 +17,7 @@ export default function FindPw() {
 
     try {
       const res = await api.post("/user/reset-password", {
-        user_id: userid,
+        userid: userid,
         email,
       });
 

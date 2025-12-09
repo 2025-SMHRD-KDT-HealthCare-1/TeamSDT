@@ -25,7 +25,7 @@ export default function SleepResult() {
   }, []);
 
   const loadUser = async () => {
-    const tokenUser = await AsyncStorage.getItem("user_id");
+    const tokenUser = await AsyncStorage.getItem("userid");
     setuserid(tokenUser);
   };
 

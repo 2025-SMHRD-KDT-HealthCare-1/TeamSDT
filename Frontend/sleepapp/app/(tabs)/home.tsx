@@ -42,7 +42,7 @@ export default function HomeScreen() {
 
         setNick(me.data.nick);
 
-        const dash = await api.get(`/home/dashboard/${me.data.user_id}`);
+        const dash = await api.get(`/home/dashboard/${me.data.userid}`);
         if (!mounted) return;
 
         setDashboard(dash.data);

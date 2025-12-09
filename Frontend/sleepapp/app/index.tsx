@@ -7,22 +7,22 @@ import styles from "../styles/loginstyles";
 
 export default function Login() {
   const router = useRouter();
-  const [user_id, setuserid] = useState("");
+  const [userid, setuserid] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-  if (!user_id || !password) {
+  if (!userid || !password) {
     Alert.alert("알림", "아이디와 비밀번호를 입력해주세요.");
     return;
   }
 
   try {
-    const res = await api.post("/user/login", { user_id, password });
+    const res = await api.post("/user/login", { userid, password });
     console.log('Test1')
     if (res.data.token) {
       console.log('Test1')
       await AsyncStorage.setItem("token", res.data.token);
-      Alert.alert("로그인 성공!", `${user_id}님 환영합니다!`);
+      Alert.alert("로그인 성공!", `${userid}님 환영합니다!`);
       router.replace("/intro");
       return;
     }

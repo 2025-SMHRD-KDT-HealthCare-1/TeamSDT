@@ -9,7 +9,7 @@ const { v4: uuidv4 } = require("uuid");
  */
 router.post("/upload", async (req, res) => {
   try {
-    const { user_id, date, apps } = req.body;
+    const { userid, date, apps } = req.body;
 
     if (!apps || apps.length === 0) {
       return res.status(400).json({ message: "앱 데이터 없음" });
@@ -32,7 +32,7 @@ router.post("/upload", async (req, res) => {
 
     const params = [
       uuidv4(),
-      user_id,
+      userid,
       date,
       totalUsage,
       topNames,
@@ -53,16 +53,16 @@ router.post("/upload", async (req, res) => {
  * 2️⃣ 스크린타임 날짜별 조회 (기존)
  * ⬅ DB와 컬럼이 다르던 부분 수정: Top_App → App_Name
  */
-router.get("/day/:user_id/:date", async (req, res) => {
+router.get("/day/:userid/:date", async (req, res) => {
   try {
-    const { user_id, date } = req.params;
+    const { userid, date } = req.params;
 
     const sql = `
       SELECT * FROM ScreenTimeRecord
       WHERE userid = ? AND DateValue = ?
     `;
 
-    const [rows] = await db.execute(sql, [user_id, date]);
+    const [rows] = await db.execute(sql, [userid, date]);
 
     if (rows.length === 0) {
       return res.json({ message: "데이터 없음" });
