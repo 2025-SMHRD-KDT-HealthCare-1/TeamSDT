@@ -1,0 +1,8 @@
+{
+    "file": "/content/snore_test.wav/snoring/I_161.wav",
+    "prediction": "no_snoring",
+    "probability": {
+        "snoring": 0.2,
+        "no_snoring": 0.8
+    }
+}
