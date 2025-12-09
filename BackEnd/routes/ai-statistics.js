@@ -4,26 +4,20 @@ const { spawn } = require("child_process");
 const path = require("path");
 
 router.post("/", (req, res) => {
-  console.log("/ai 라우터 진입!");
-
-  // ✅ 여기 ↓↓↓ 가장 위에 넣기 (Python 실행 테스트)
-  const pythonCmd = process.platform === "win32" ? "python" : "python3";
-  console.log("실행된 Python 경로:", pythonCmd);
-
-  const testPy = spawn(pythonCmd, ["-c", "import sys; print(sys.executable)"]);
-  testPy.stdout.on("data", (d) => {
-    console.log("NODE가 실행한 Python:", d.toString());
-  });
+  console.log("💡 /ai 라우터 실행됨");
   console.log("받은 데이터:", req.body);
+
+  // OS에 따라 Python 명령 선택
+  const pythonCmd = process.platform === "win32" ? "python" : "python3";
+  console.log("사용되는 Python 명령:", pythonCmd);
 
   try {
     const pythonFile = path.join(__dirname, "../ai/sleep_ai_wrapper.py");
 
-    // ✔ Python 명령 자동 선택
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-
+    // Python 스크립트 실행
     const py = spawn(pythonCmd, [pythonFile]);
 
+    // Python에게 데이터 전달(JSON)
     py.stdin.write(JSON.stringify(req.body));
     py.stdin.end();
 
@@ -42,7 +36,7 @@ router.post("/", (req, res) => {
       console.log("Python 종료 코드:", code);
 
       if (errLog.trim().length > 0) {
-        console.log("⚠ Python stderr:", errLog);
+        console.log("⚠️ Python stderr:", errLog);
       }
 
       if (code !== 0) {
