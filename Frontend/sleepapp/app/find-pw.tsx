@@ -6,18 +6,18 @@ import api from "./api/apiconfig";
 
 export default function FindPw() {
   const router = useRouter();
-  const [userId, setUserId] = useState("");
+  const [userid, setuserid] = useState("");
   const [email, setEmail] = useState("");
 
   const handleFindPw = async () => {
-    if (!userId.trim() || !email.trim()) {
+    if (!userid.trim() || !email.trim()) {
       Alert.alert("알림", "아이디와 이메일을 모두 입력해주세요.");
       return;
     }
 
     try {
       const res = await api.post("/user/reset-password", {
-        user_id: userId,
+        userid: userid,
         email,
       });
 
@@ -43,7 +43,7 @@ export default function FindPw() {
         style={styles.input}
         placeholder="아이디 입력"
         placeholderTextColor="#aaa"
-        onChangeText={setUserId}
+        onChangeText={setuserid}
       />
 
       <TextInput

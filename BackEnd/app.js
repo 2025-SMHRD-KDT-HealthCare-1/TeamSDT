@@ -44,6 +44,15 @@ app.use("/home", homeRouter);
 const sleepRouter = require("./routes/sleep");
 app.use("/sleep", sleepRouter);
 
+// ✅ AI JSON 라우터 연결
+const aiJsonRouter = require("./routes/ai-json");
+app.use("/ai-json", aiJsonRouter);
+
+// ✅ Gemini AI 라우터 연결
+const aiGeminiRouter = require("./routes/ai-gemini");
+app.use("/ai-gemini", aiGeminiRouter);
+
+
 app.listen(3000, () => {
   console.log("서버 실행됨 -> http://172.20.10.5:3000");
 });

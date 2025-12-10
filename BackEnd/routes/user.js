@@ -6,19 +6,19 @@ const jwt = require("jsonwebtoken");
 
 
 router.post("/join", async (req, res) => {
-  const { user_id, password, nick, email, phone } = req.body;
+  const { userid, password, nick, email, phone } = req.body;
 
   try {
     const [idRows] = await db.execute(
-      "SELECT user_id FROM users WHERE user_id = ?",
-      [user_id]
+      "SELECT userid FROM Users WHERE userid = ?",
+      [userid]
     );
     if (idRows.length > 0) {
       return res.status(400).json({ message: "이미 존재하는 아이디입니다." });
     }
 
     const [emailRows] = await db.execute(
-      "SELECT email FROM users WHERE email = ?",
+      "SELECT email FROM Users WHERE email = ?",
       [email]
     );
     if (emailRows.length > 0) {
@@ -28,8 +28,8 @@ router.post("/join", async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
 
     const sql =
-      "INSERT INTO users (user_id, password, nick, email, phone) VALUES (?, ?, ?, ?, ?)";
-    await db.execute(sql, [user_id, hashed, nick, email, phone]);
+      "INSERT INTO Users (userid, password, nick, email, phone) VALUES (?, ?, ?, ?, ?)";
+    await db.execute(sql, [userid, hashed, nick, email, phone]);
 
     return res.json({ message: "회원가입 성공" });
   } catch (err) {
@@ -39,12 +39,12 @@ router.post("/join", async (req, res) => {
 
 
 router.post("/login", async (req, res) => {
-  const { user_id, password } = req.body;
+  const { userid, password } = req.body;
 
   try {
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE user_id = ?",
-      [user_id]
+      "SELECT * FROM Users WHERE userid = ?",
+      [userid]
     );
 
     if (rows.length === 0)
@@ -58,7 +58,7 @@ router.post("/login", async (req, res) => {
 
     // JWT 발급
     const token = jwt.sign(
-      { user_id: rows[0].user_id },
+      { userid: rows[0].userid },
       SECRET,
       { expiresIn: "30d" }
     );
@@ -66,7 +66,7 @@ router.post("/login", async (req, res) => {
     return res.json({
       message: "로그인 성공",
       token: token,
-      user_id: rows[0].user_id,
+      userid: rows[0].userid,
     });
   } catch (err) {
     return res.status(500).json({ message: "로그인 실패", err });
@@ -79,7 +79,7 @@ router.post("/find-id", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      "SELECT user_id FROM users WHERE email = ?",
+      "SELECT userid FROM Users WHERE email = ?",
       [email]
     );
 
@@ -89,7 +89,7 @@ router.post("/find-id", async (req, res) => {
 
     return res.json({
       message: "아이디 조회 성공",
-      user_id: rows[0].user_id,
+      userid: rows[0].userid,
     });
   } catch (err) {
     return res.status(500).json({
@@ -106,12 +106,12 @@ function generateTempPassword() {
 }
 
 router.post("/reset-password", async (req, res) => {
-  const { user_id, email } = req.body;
+  const { userid, email } = req.body;
 
   try {
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE user_id = ? AND email = ?",
-      [user_id, email]
+      "SELECT * FROM Users WHERE userid = ? AND email = ?",
+      [userid, email]
     );
 
     if (rows.length === 0) {
@@ -122,8 +122,8 @@ router.post("/reset-password", async (req, res) => {
     const hashed = await bcrypt.hash(tempPassword, 10);
 
     await db.execute(
-      "UPDATE users SET password = ? WHERE user_id = ?",
-      [hashed, user_id]
+      "UPDATE Users SET password = ? WHERE userid = ?",
+      [hashed, userid]
     );
 
     return res.json({
@@ -141,12 +141,12 @@ router.post("/reset-password", async (req, res) => {
 
 
 router.get("/check-id", async (req, res) => {
-  const { user_id } = req.query;
+  const { userid } = req.query;
 
   try {
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE user_id = ?",
-      [user_id]
+      "SELECT * FROM Users WHERE userid = ?",
+      [userid]
     );
 
     return res.json({ exists: rows.length > 0 });
@@ -157,17 +157,17 @@ router.get("/check-id", async (req, res) => {
 
 
 
-router.get("/profile/:user_id", async (req, res) => {
-  const { user_id } = req.params;
+router.get("/profile/:userid", async (req, res) => {
+  const { userid } = req.params;
 
   try {
     const [rows] = await db.execute(
       `
-      SELECT user_id, nick, email, phone 
-      FROM users 
-      WHERE user_id = ? AND is_deleted = 0
+      SELECT userid, nick, email, phone 
+      FROM Users 
+      WHERE userid = ? AND is_deleted = 0
       `,
-      [user_id]
+      [userid]
     );
 
     if (rows.length === 0) {
@@ -196,11 +196,11 @@ router.get("/me", async (req, res) => {
     const SECRET = process.env.JWT_SECRET || "mysecretkey";
 
     const decoded = jwt.verify(token, SECRET);
-    const userId = decoded.user_id;
+    const userid = decoded.userid;
 
     const [rows] = await db.execute(
-      "SELECT user_id, nick, email, phone FROM users WHERE user_id = ? AND is_deleted = 0",
-      [userId]
+      "SELECT userid, nick, email, phone FROM Users WHERE userid = ? AND is_deleted = 0",
+      [userid]
     );
 
     if (rows.length === 0) {
@@ -215,13 +215,13 @@ router.get("/me", async (req, res) => {
 
 
 
-router.delete("/delete/:user_id", async (req, res) => {
-  const { user_id } = req.params;
+router.delete("/delete/:userid", async (req, res) => {
+  const { userid } = req.params;
 
   try {
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE user_id = ? AND is_deleted = 0",
-      [user_id]
+      "SELECT * FROM Users WHERE userid = ? AND is_deleted = 0",
+      [userid]
     );
 
     if (rows.length === 0) {
@@ -231,8 +231,8 @@ router.delete("/delete/:user_id", async (req, res) => {
     }
 
     await db.execute(
-      "UPDATE users SET is_deleted = 1 WHERE user_id = ?",
-      [user_id]
+      "UPDATE Users SET is_deleted = 1 WHERE userid = ?",
+      [userid]
     );
 
     return res.json({ message: "회원탈퇴 완료" });

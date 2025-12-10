@@ -3,36 +3,13 @@ const router = express.Router();
 const db = require("../db/database");
 const { v4: uuidv4 } = require("uuid");
 
-function convertStarbucksSize(volume) {
-  const num = parseInt(volume.replace(/[^0-9]/g, ""));
-
-  if (num === 237) return "Short";
-  if (num === 355) return "Tall";
-  if (num === 473) return "Grande";
-  if (num === 591) return "Venti (Iced)";
-  if (num === 710) return "Trenta";
-  if (num === 946) return "Venti (Hot)";
-
-  return volume;
-}
-
-function normalizeLabel(original) {
-  let label = original;
-
-  label = label.replace(/^(커피_|스무디_커피_|스무디_)/, "");
-  label = label.replace(/^카페\s*/, "");
-  label = label.replace(/\((Short|Tall|Grande|Venti \(Iced\)|Venti \(Hot\)|Trenta)\)/g, "");
-  label = label.replace(/\(ICED\)/gi, "ICED").replace(/\(HOT\)/gi, "HOT");
-  label = label.replace(/아이스/gi, "").replace(/핫/gi, "");
-  label = label.replace(/ICEDICED/g, "ICED").replace(/HOTHOT/g, "HOT");
-
-  return label.replace(/\s+/g, " ").trim();
-}
-
+/* -------------------------------------------------------
+ * 1️⃣ 전체 브랜드 조회
+ * -----------------------------------------------------*/
 router.get("/brands", async (req, res) => {
   try {
     const [rows] = await db.execute(
-      "SELECT DISTINCT brand FROM caffeine_menu ORDER BY brand"
+      "SELECT DISTINCT brand FROM CaffeineMenu ORDER BY brand"
     );
     const brands = rows.map((row) => row.brand);
     res.json({ brands });
@@ -42,6 +19,9 @@ router.get("/brands", async (req, res) => {
   }
 });
 
+/* -------------------------------------------------------
+ * 2️⃣ 브랜드별 메뉴 조회
+ * -----------------------------------------------------*/
 router.get("/menus", async (req, res) => {
   const { brand } = req.query;
 
@@ -51,34 +31,25 @@ router.get("/menus", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      "SELECT DISTINCT menu FROM caffeine_menu WHERE brand = ? ORDER BY menu",
+      "SELECT DISTINCT menu FROM CaffeineMenu WHERE brand = ? ORDER BY menu",
       [brand]
     );
 
     const menus = rows.map((row) => {
       const original = row.menu;
-
       let label = original;
 
+      // 이름 정리
       label = label.replace(/^(커피_|스무디_커피_|스무디_)/, "");
       label = label.replace(/^카페\s*/, "");
       label = label.replace(/\s*\((Short|Tall|Grande|Venti \(Iced\)|Venti \(Hot\)|Trenta)\)\s*$/, "");
       label = label.replace(/\(ICED\)/gi, "ICED").replace(/\(HOT\)/gi, "HOT");
       label = label.replace(/아이스/gi, "").replace(/핫/gi, "");
-
-      if (/^모카/i.test(label)) {
-        label = "카페" + label;
-      }
-      if (/^라떼/i.test(label)) {
-        label = "카페" + label;
-      }
-
-      label = label.replace(/ICEDICED/gi, "ICED").replace(/HOTHOT/gi, "HOT");
       label = label.replace(/\s+/g, " ").trim();
 
       return {
         label,
-        menu_key: original
+        menu_key: original,
       };
     });
 
@@ -89,6 +60,9 @@ router.get("/menus", async (req, res) => {
   }
 });
 
+/* -------------------------------------------------------
+ * 3️⃣ 한 메뉴의 사이즈 목록 조회
+ * -----------------------------------------------------*/
 router.get("/sizes", async (req, res) => {
   const { brand, menu_key } = req.query;
 
@@ -98,32 +72,22 @@ router.get("/sizes", async (req, res) => {
   try {
     const [rows] = await db.execute(
       `SELECT size, caffeine_mg 
-       FROM caffeine_menu 
+       FROM CaffeineMenu
        WHERE brand = ?
        AND menu LIKE CONCAT('%', ?, '%')`,
       [brand, menu_key]
     );
 
-    const result = rows.map((row) => {
-      let sizeLabel = row.size;
-
-      if (brand === "스타벅스") {
-        sizeLabel = convertStarbucksSize(row.size);
-      }
-
-      return {
-        size: sizeLabel,
-        caffeine_mg: row.caffeine_mg
-      };
-    });
-
-    res.json({ sizes: result });
+    res.json({ sizes: rows });
   } catch (err) {
-    console.error(err);
+    console.error("GET /caffeine/sizes error:", err);
     res.status(500).json({ message: "사이즈 조회 중 오류 발생" });
   }
 });
 
+/* -------------------------------------------------------
+ * 4️⃣ 카페인 총량 계산
+ * -----------------------------------------------------*/
 router.post("/calc", async (req, res) => {
   const { items } = req.body;
   if (!items) return res.status(400).json({ message: "items 필요" });
@@ -134,26 +98,9 @@ router.post("/calc", async (req, res) => {
     for (const item of items) {
       const { brand, menu, size, count } = item;
 
-      let querySize = size;
-
-      if (brand === "스타벅스") {
-        const reverseMap = {
-          "Short": "237g",
-          "Tall": "355g",
-          "Grande": "473g",
-          "Venti (Iced)": "591g",
-          "Trenta": "710g",
-          "Venti (Hot)": "946g"
-        };
-
-        if (reverseMap[size]) {
-          querySize = reverseMap[size];
-        }
-      }
-
       const [rows] = await db.execute(
-        "SELECT caffeine_mg FROM caffeine_menu WHERE brand = ? AND menu = ? AND size = ?",
-        [brand, menu, querySize]
+        "SELECT caffeine_mg FROM CaffeineMenu WHERE brand = ? AND menu = ? AND size = ?",
+        [brand, menu, size]
       );
 
       if (rows.length > 0) {
@@ -163,36 +110,95 @@ router.post("/calc", async (req, res) => {
 
     res.json({ totalCaffeineMg: total });
   } catch (err) {
-    console.error(err);
+    console.error("POST /caffeine/calc error:", err);
     res.status(500).json({ message: "카페인 계산 중 오류 발생" });
   }
 });
 
-
-
+/* -------------------------------------------------------
+ * 5️⃣ 카페인 마신 기록 저장
+ * -----------------------------------------------------*/
 router.post("/log", async (req, res) => {
-  const { userId, drink, size, caffeine, intakeTime } = req.body;
+  const { userid, drink, size, caffeine, intakeTime } = req.body;
 
-  if (!userId || !drink || !size || !caffeine || !intakeTime) {
+  if (!userid || !drink || !size || !caffeine || !intakeTime) {
     return res.status(400).json({ message: "필수 값 누락" });
   }
 
   try {
-    const caffeineId = uuidv4(); // ✅ PK 생성
+    const caffeineId = uuidv4();
 
     await db.execute(
       `INSERT INTO CaffeineLog 
-       (Caffeine_ID, UserID, DrinkType, DrinkSize, Caffeine_Amount, IntakeTime)
+       (Caffeine_ID, userid, DrinkType, DrinkSize, Caffeine_Amount, IntakeTime)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [caffeineId, userId, drink, size, caffeine, intakeTime]
+      [caffeineId, userid, drink, size, caffeine, intakeTime]
     );
 
     res.json({ success: true });
   } catch (err) {
     console.error("POST /caffeine/log error:", err);
-    res.status(500).json({ message: "카페인 기록 저장 중 오류 발생" });
+    res.status(500).json({ message: "카페인 기록 저장 오류" });
   }
 });
 
+/* -------------------------------------------------------
+ * 6️⃣ 기존 전체 기록 조회
+ * -----------------------------------------------------*/
+router.get("/list/:userid", async (req, res) => {
+  try {
+    const { userid } = req.params;
+
+    const [rows] = await db.execute(
+      `
+      SELECT Caffeine_ID, userid, DrinkType, DrinkSize, 
+             Caffeine_Amount, IntakeTime, created_at
+      FROM CaffeineLog
+      WHERE userid = ?
+      ORDER BY created_at DESC
+      `,
+      [userid]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("GET /caffeine/list error:", err);
+    res.status(500).json({ message: "카페인 조회 오류" });
+  }
+});
+
+/* -------------------------------------------------------
+ * ⭐ 7️⃣ 마이페이지용 — 날짜별 총 카페인 섭취량
+ *     created_at 날짜 기준으로 변경 (정확한 날짜 비교)
+ * -----------------------------------------------------*/
+router.get("/simple/:userid/:date", async (req, res) => {
+  const { userid, date } = req.params;
+
+  try {
+    const [rows] = await db.execute(
+      `
+      SELECT Caffeine_Amount
+      FROM CaffeineLog
+      WHERE userid = ?
+        AND DATE(created_at) = ?
+      `,
+      [userid, date]
+    );
+
+    if (rows.length === 0) {
+      return res.json({ caffeine: "기록 없음" });
+    }
+
+    const total = rows.reduce(
+      (sum, r) => sum + Number(r.Caffeine_Amount),
+      0
+    );
+
+    res.json({ caffeine: `${total}mg` });
+  } catch (err) {
+    console.error("GET /caffeine/simple error:", err);
+    res.status(500).json({ message: "카페인 날짜조회 오류" });
+  }
+});
 
 module.exports = router;

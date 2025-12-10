@@ -4,7 +4,7 @@ const { spawn } = require("child_process");
 const path = require("path");
 
 router.post("/", (req, res) => {
-  console.log("/ai 라우터 진입!");
+  console.log("\n===== /ai 요청 도착 =====");
   console.log("받은 데이터:", req.body);
 
   try {

@@ -50,7 +50,7 @@ function groupByPeriod(data, period) {
 // 최종 API
 router.get("/sleep", async (req, res) => {
   const { period } = req.query;
-  const user_id = req.query.user_id;
+  const userid = req.query.userid;
 
   if (!["day", "week", "month", "all"].includes(period)) {
     return res.status(400).json({ message: "period 오류" });
@@ -59,8 +59,8 @@ router.get("/sleep", async (req, res) => {
   try {
     // 수면 설정
     const [settingRows] = await db.execute(
-      `SELECT SleepTime, WakeTime FROM SleepSetting WHERE UserID = ?`,
-      [user_id]
+      `SELECT SleepTime, WakeTime FROM SleepSetting WHERE userid = ?`,
+      [userid]
     );
 
     const sleepSetting = settingRows[0];
@@ -75,8 +75,8 @@ router.get("/sleep", async (req, res) => {
 
     // 스크린타임 기록
     const [screenRows] = await db.execute(
-      `SELECT DateValue, Total_ScreenTime FROM ScreenTimeRecord WHERE UserID = ?`,
-      [user_id]
+      `SELECT DateValue, Total_ScreenTime FROM ScreenTimeRecord WHERE userid = ?`,
+      [userid]
     );
 
     // 실제 수면시간 계산

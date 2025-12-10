@@ -9,40 +9,23 @@ import * as FileSystem from "expo-file-system/legacy";
 export default function HomeScreen() {
   const [nick, setNick] = useState("");
   const [loading, setLoading] = useState(true);
+  const [dashboard, setDashboard] = useState<any>(null);
 
-  // ✅ 어제 수면 + 홈 대시보드 데이터
-  const [dashboard, setDashboard] = useState<{
-    totalSleep: { hours: number; minutes: number };
-    sleepTime: { hours: number; minutes: number };
-    wakeTime: { hours: number; minutes: number };
-    screenTime: { hours: number; minutes: number };
-    caffeine: { type: string; cups: number; mg: number };
-  } | null>(null);
-
-  // ✅ AI
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiAudioBase64, setAiAudioBase64] = useState<string | null>(null);
 
-  // ✅ TTS 재생
   async function playBase64Audio(base64Audio?: string) {
     try {
-      if (!base64Audio) {
-        console.log("⚠️ TTS 음성 데이터가 없습니다.");
-        return;
-      }
+      if (!base64Audio) return;
 
-      const fileUri =
-        (FileSystem as any).documentDirectory + "ai_tts.mp3";
+      const fileUri = FileSystem.documentDirectory + "ai_tts.mp3";
 
       await FileSystem.writeAsStringAsync(fileUri, base64Audio, {
-        encoding: "base64",
+        encoding: FileSystem.EncodingType.Base64,
       });
 
-      await Audio.Sound.createAsync(
-        { uri: fileUri },
-        { shouldPlay: true }
-      );
+      await Audio.Sound.createAsync({ uri: fileUri }, { shouldPlay: true });
     } catch (err) {
       console.log("TTS 재생 오류:", err);
     }
@@ -111,24 +94,22 @@ export default function HomeScreen() {
       <StarsBackground style={styles.starsContainer} />
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* ✅ 헤더 */}
-        <View
-          style={[styles.header, { backgroundColor: "rgba(62,79,147,0.85)" }]}
-        >
+        {/* 헤더 */}
+        <View style={[styles.header, { backgroundColor: "rgba(62,79,147,0.85)" }]}>
           <View>
             <Text style={styles.headerWelcome}>환영합니다</Text>
             <Text style={styles.headerName}>{nick}님 🌙</Text>
           </View>
-
           <View style={styles.headerIconBox}>
             <Moon size={40} color="white" />
           </View>
         </View>
 
-        {/* ✅ 어제 수면 리포트 */}
+        {/* 수면 리포트 */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>오늘의 수면 리포트</Text>
+          <Text style={styles.cardTitle}>오늘의 요약</Text>
 
+          {/* 총 수면시간 */}
           <View style={styles.rowBetween}>
             <View style={styles.rowLeft}>
               <Clock size={26} color="#7aa2ff" />
@@ -141,24 +122,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          <View style={styles.rowBetween}>
-            <Text style={styles.smallLabel}>잠든 시간</Text>
-            <Text style={styles.smallValue}>
-              {dashboard
-                ? `${dashboard.sleepTime.hours}시 ${dashboard.sleepTime.minutes}분`
-                : "기록 없음"}
-            </Text>
-          </View>
-
-          <View style={styles.rowBetween}>
-            <Text style={styles.smallLabel}>기상 시간</Text>
-            <Text style={styles.smallValue}>
-              {dashboard
-                ? `${dashboard.wakeTime.hours}시 ${dashboard.wakeTime.minutes}분`
-                : "기록 없음"}
-            </Text>
-          </View>
-
+          {/* 스마트폰 사용 */}
           <View style={styles.rowBetween}>
             <View style={styles.rowLeft}>
               <Smartphone size={24} color="#7aa2ff" />
@@ -171,6 +135,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
+          {/* 카페인 섭취 */}
           <View style={styles.rowBetween}>
             <View style={styles.rowLeft}>
               <Coffee size={24} color="#7aa2ff" />
@@ -178,13 +143,13 @@ export default function HomeScreen() {
             </View>
             <Text style={styles.value}>
               {dashboard
-                ? `${dashboard.caffeine.type} / ${dashboard.caffeine.cups}잔 / ${dashboard.caffeine.mg}mg`
+                ? `${dashboard.caffeine.cups}잔 / ${dashboard.caffeine.mg}mg`
                 : "기록 없음"}
             </Text>
           </View>
         </View>
 
-        {/* ✅ AI 분석 + 다시 듣기 버튼 */}
+        {/* AI 분석 */}
         <View style={[styles.card, { marginTop: 20 }]}>
           <Text style={styles.cardTitle}>AI 수면 분석</Text>
 

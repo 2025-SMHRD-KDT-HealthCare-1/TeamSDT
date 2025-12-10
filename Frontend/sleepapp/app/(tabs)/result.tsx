@@ -8,10 +8,9 @@ import {
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import styles from "../../styles/resultstyles";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import StarsBackground from "../../components/starsbackground";
 
-type TabType = "day" | "week" | "month" | "all";
+type TabType = "day" | "week" | "month";
 
 export default function SleepResult() {
   const [tab, setTab] = useState<TabType>("week");
@@ -36,16 +35,8 @@ export default function SleepResult() {
     ],
     month: Array.from({ length: 30 }).map((_, i) => ({
       label: `${i + 1}`,
-      sleep: Math.round((5 + Math.random() * 4) * 10) / 10, // 5~9시간 랜덤
+      sleep: Math.round((5 + Math.random() * 4) * 10) / 10,
     })),
-    all: [
-      { label: "1월", sleep: 6.8 },
-      { label: "2월", sleep: 7.1 },
-      { label: "3월", sleep: 6.4 },
-      { label: "4월", sleep: 7.3 },
-      { label: "5월", sleep: 6.9 },
-      { label: "6월", sleep: 7.6 },
-    ],
   };
 
   // -----------------------------------
@@ -59,7 +50,7 @@ export default function SleepResult() {
   };
 
   // -----------------------------------
-  // 🚀 탭 변경 시 가상 데이터 세팅
+  // 🚀 탭 변경 시 데이터 반영
   // -----------------------------------
   useEffect(() => {
     setGraphData(fakeGraph[tab]);
@@ -68,34 +59,26 @@ export default function SleepResult() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0A0D1A" }}>
-      
       <StarsBackground style={styles.starsContainer} />
 
       <ScrollView style={styles.container}>
         
         {/* 탭 버튼 */}
         <View style={styles.tabContainer}>
-          {["day", "week", "month", "all"].map((key) => (
+          {["day", "week", "month"].map((key) => (
             <TouchableOpacity
               key={key}
               onPress={() => setTab(key as TabType)}
-              style={[
-                styles.tabBtn,
-                tab === key && styles.tabSelected
-              ]}
+              style={[styles.tabBtn, tab === key && styles.tabSelected]}
             >
               <Text
-                style={[
-                  styles.tabText,
-                  tab === key && styles.tabSelectedText
-                ]}
+                style={[styles.tabText, tab === key && styles.tabSelectedText]}
               >
-                {{
+                {({
                   day: "일",
                   week: "주",
                   month: "월",
-                  all: "전체",
-                }[key]}
+                } as any)[key]}
               </Text>
             </TouchableOpacity>
           ))}
@@ -108,33 +91,42 @@ export default function SleepResult() {
           {graphData.length === 0 ? (
             <Text style={styles.graphPlaceholder}>데이터 없음</Text>
           ) : (
-            <View style={styles.barChartWrapper}>
-              {graphData.map((item, idx) => {
-                const sleep = Number(item.sleep) || 0;
-                const maxHour = 10;
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 10 }}
+            >
+              <View style={[styles.barChartWrapper, { flexDirection: "row" }]}>
+                {graphData.map((item, idx) => {
+                  const sleep = Number(item.sleep) || 0;
+                  const maxHour = 10;
 
-                const ratio = Math.min(Math.max(sleep / maxHour, 0), 1);
-                const barHeight = ratio * 140;
-                const barColor = `rgba(110,168,254,${0.3 + ratio * 0.7})`;
+                  const ratio = Math.min(Math.max(sleep / maxHour, 0), 1);
+                  const barHeight = ratio * 140;
+                  const barColor = `rgba(110,168,254,${0.3 + ratio * 0.7})`;
 
-                return (
-                  <View key={`${item.label}-${idx}`} style={styles.barItem}>
+                  return (
                     <View
-                      style={[
-                        styles.bar,
-                        { height: barHeight, backgroundColor: barColor },
-                      ]}
-                    />
-                    <Text style={[styles.barLabel, { color: barColor }]}>
-                      {item.label}
-                    </Text>
-                    <Text style={[styles.barValue, { color: barColor }]}>
-                      {sleep}h
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
+                      key={`${item.label}-${idx}`}
+                      style={[styles.barItem, { marginRight: 12 }]}
+                    >
+                      <View
+                        style={[
+                          styles.bar,
+                          { height: barHeight, backgroundColor: barColor },
+                        ]}
+                      />
+                      <Text style={[styles.barLabel, { color: barColor }]}>
+                        {item.label}
+                      </Text>
+                      <Text style={[styles.barValue, { color: barColor }]}>
+                        {sleep}h
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
           )}
         </View>
 
@@ -142,18 +134,23 @@ export default function SleepResult() {
         <View style={styles.aiBox}>
           <Text style={styles.aiTitle}>AI 수면 흐름 분석</Text>
 
-          <Text style={styles.aiText}>
-            {aiData ? (
-              <>
-                {aiData.summary}{"\n"}
-                {aiData.problem}{"\n"}
-                {aiData.effect}{"\n"}
-                {aiData.solution}
-              </>
-            ) : (
-              "분석 데이터 없음"
-            )}
-          </Text>
+          {aiData ? (
+            <>
+              <Text style={styles.aiSectionTitle}>요약</Text>
+              <Text style={styles.aiText}>{aiData.summary}</Text>
+
+              <Text style={styles.aiSectionTitle}>원인</Text>
+              <Text style={styles.aiText}>{aiData.problem}</Text>
+
+              <Text style={styles.aiSectionTitle}>영향</Text>
+              <Text style={styles.aiText}>{aiData.effect}</Text>
+
+              <Text style={styles.aiSectionTitle}>해결 방안</Text>
+              <Text style={styles.aiText}>{aiData.solution}</Text>
+            </>
+          ) : (
+            <Text style={styles.aiText}>분석 데이터 없음</Text>
+          )}
         </View>
 
         <View style={styles.footerSection}>

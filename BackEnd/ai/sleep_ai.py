@@ -1,4 +1,3 @@
-# sleep_ai.py
 import os
 from pathlib import Path
 import numpy as np
@@ -6,110 +5,97 @@ import faiss
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer, CrossEncoder
 import google.generativeai as genai
-
 from gtts import gTTS
 from io import BytesIO
 import base64
+import warnings
+
+warnings.filterwarnings("ignore")
+
+# 📌 .env 로드
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-2.5-flash")
+
+# 📌 docs.txt 로드
+AI_DIR = Path(__file__).resolve().parent
+with open(AI_DIR / "docs.txt", "r", encoding="utf-8") as f:
+    sentences = [line.strip() for line in f.readlines() if line.strip()]
+
+# 📌 Embedding 모델
+embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+vectors = embed_model.encode(sentences)
+
+index = faiss.IndexFlatL2(vectors.shape[1])
+index.add(np.array(vectors))
+
+# 📌 Reranker
+reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+# ============ 기능 함수 ============
 
 def tts_generate_memory(text):
     mp3_fp = BytesIO()
     tts = gTTS(text=text, lang='ko')
     tts.write_to_fp(mp3_fp)
     mp3_fp.seek(0)
+    return base64.b64encode(mp3_fp.read()).decode('utf-8')
 
-    # Base64로 인코딩해서 Node에 전달
-    audio_base64 = base64.b64encode(mp3_fp.read()).decode('utf-8')
-    return audio_base64
+def search_docs(caffeine, screen_time, sleep_time, top_k=5):
+    query = f"""
+    카페인 {caffeine}mg, 스크린타임 {screen_time}시간,
+    수면 {sleep_time}시간의 과학적 영향 설명
+    """
+    q_vec = embed_model.encode([query])
+    _, idx = index.search(q_vec, top_k)
+
+    candidates = [sentences[i] for i in idx[0]]
+    scores = reranker.predict([[query, c] for c in candidates])
+
+    ranked = sorted(zip(candidates, scores), key=lambda x: x[1], reverse=True)
+    return [r[0] for r in ranked[:3]]
+
+def summarize(docs):
+    docs_join = "\n".join(docs)
+    prompt = f"""
+    다음 연구 내용을 3줄 핵심 요약해줘:
+
+    {docs_join}
+
+    - 과학적 핵심 요점
+    - 신체/호르몬 반응
+    - 행동 영향
+    """
+    return model.generate_content(prompt).text.strip()
 
 def run_feedback_api(user_name, caffeine, screen_time, sleep_time, style="친근하게"):
-    # ✅ .env 로드
-    BASE_DIR = Path(__file__).resolve().parent.parent
-    load_dotenv(BASE_DIR / ".env")
 
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-    genai.configure(api_key=GEMINI_API_KEY)
+    docs = search_docs(caffeine, screen_time, sleep_time)
+    summary = summarize(docs)
 
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    tone = {
+        "친근하게": "친근하고 부드러운 말투로",
+        "전문가처럼": "전문가 말투로",
+        "유머 섞어서": "가볍게 유머 섞어서",
+    }.get(style, "친근하게")
 
-    # ✅ 문장 로드 (docs.txt)
-    AI_DIR = Path(__file__).resolve().parent
-    with open(AI_DIR / "docs.txt", "r", encoding="utf-8") as f:
-        sentences = [line.strip() for line in f.readlines() if line.strip()]
+    prompt = f"""
+    당신은 수면 전문 AI입니다.
 
-    # ✅ 임베딩 모델
-    embed_model = SentenceTransformer("all-MiniLM-L6-v2")
-    vectors = embed_model.encode(sentences)
+    ▼ 연구 요약
+    {summary}
 
-    index = faiss.IndexFlatL2(vectors.shape[1])
-    index.add(np.array(vectors))
+    ▼ 사용자 생활 패턴
+    - 이름: {user_name}
+    - 카페인: {caffeine}mg
+    - 스크린타임: {screen_time}시간
+    - 수면시간: {sleep_time}시간
 
-    # ✅ Reranker 모델
-    reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+    ▼ 지시사항
+    {tone} 2~3문장으로 핵심만 설명해줘.
+    """
 
-    # ✅ 검색 + Reranking
-    def search_relevant_docs(caffeine, screen_time, sleep_time, top_k=5):
-        query = f"""
-        카페인 {caffeine}mg, 스크린타임 {screen_time}시간, 수면 {sleep_time}시간이
-        수면 건강에 미치는 과학적 영향 요약
-        """
-
-        q_vec = embed_model.encode([query])
-        _, idx = index.search(q_vec, top_k)
-
-        candidates = [sentences[i] for i in idx[0]]
-
-        pairs = [[query, c] for c in candidates]
-        scores = reranker.predict(pairs)
-
-        ranked = sorted(zip(candidates, scores), key=lambda x: x[1], reverse=True)
-        return [r[0] for r in ranked[:3]]  # top 3
-
-    # ✅ 논문 요약
-    def summarize_docs(doc_list):
-        docs = "\n".join(doc_list)
-        prompt = f"""
-        다음 연구 결과를 기반으로 '수면 과학 핵심 요점'을 3줄로 정리해줘.
-
-        연구 내용:
-        {docs}
-
-        요약 형식:
-        - (과학 근거)
-        - (신체/호르몬)
-        - (행동 습관 영향)
-        """
-        return model.generate_content(prompt).text.strip()
-
-    # ✅ 실제 실행
-    docs = search_relevant_docs(caffeine, screen_time, sleep_time)
-    summarized = summarize_docs(docs)
-
-    # ✅ 최종 프롬프트
-    def build_prompt():
-        tone = {
-            "친근하게": "친근하고 부드럽게 설명해줘.",
-            "전문가처럼": "전문가 말투로 설명해줘.",
-            "유머 섞어서": "약간 유머러스하게 말해줘."
-        }.get(style, "친근하게 설명해줘.")
-
-        return f"""
-        당신은 수면 과학 전문가입니다.
-
-        ▼ 연구 요약 (모델이 이해하기 좋게 정제됨)
-        {summarized}
-
-        ▼ 사용자 정보
-        - 이름: {user_name}
-        - 카페인 섭취: {caffeine}mg
-        - 스크린타임: {screen_time}시간
-        - 수면시간: {sleep_time}시간
-
-        ▼ 요구사항
-        위 연구 기반으로, 사용자의 생활 패턴을 분석하고
-        {tone}
-        - 연구 요약을 기반으로 ‘핵심만’ 담아서 2~3문장으로 말해줘.
-        - 절대 반복하지 말고, 너무 길게 설명하지 마.
-        """
-
-    answer = model.generate_content(build_prompt()).text.strip()
-    return answer
+    return model.generate_content(prompt).text.strip()

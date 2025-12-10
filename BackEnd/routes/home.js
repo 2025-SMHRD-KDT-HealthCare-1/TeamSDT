@@ -2,20 +2,21 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db/database");
 
-router.get("/dashboard/:userId", async (req, res) => {
-  const { userId } = req.params;
+router.get("/dashboard/:userid", async (req, res) => {
+  const { userid } = req.params;
 
   try {
-    // ✅ 1) 어제 수면 데이터
+    // ✅ 1) 최근 수면 기록 1건 가져오기
     const [[sleepRow]] = await db.execute(
-      `SELECT SleepStart, SleepEnd, TotalSleepTime 
-       FROM SleepRecord 
-       WHERE UserID = ?
-         AND DateValue = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-         AND SleepEnd IS NOT NULL
-       ORDER BY DateValue DESC 
-       LIMIT 1`,
-      [userId]
+      `
+      SELECT SleepStart, SleepEnd, TotalSleepTime, DateValue
+      FROM SleepRecord
+      WHERE userid = ?
+        AND SleepEnd IS NOT NULL
+      ORDER BY DateValue DESC, SleepStart DESC
+      LIMIT 1
+      `,
+      [userid]
     );
 
     let totalSleep = { hours: 0, minutes: 0 };
@@ -23,44 +24,77 @@ router.get("/dashboard/:userId", async (req, res) => {
     let wakeTime = { hours: 0, minutes: 0 };
 
     if (sleepRow) {
-      const totalMin = sleepRow.TotalSleepTime || 0;
-      totalSleep.hours = Math.floor(totalMin / 60);
-      totalSleep.minutes = totalMin % 60;
+      const totalMin = sleepRow.TotalSleepTime ?? 0;
 
-      sleepTime.hours = parseInt(sleepRow.SleepStart?.slice(0, 2)) || 0;
-      sleepTime.minutes = parseInt(sleepRow.SleepStart?.slice(3, 5)) || 0;
+      totalSleep = {
+        hours: Math.floor(totalMin / 60),
+        minutes: totalMin % 60,
+      };
 
-      wakeTime.hours = parseInt(sleepRow.SleepEnd?.slice(0, 2)) || 0;
-      wakeTime.minutes = parseInt(sleepRow.SleepEnd?.slice(3, 5)) || 0;
+      sleepTime = {
+        hours: parseInt(sleepRow.SleepStart?.slice(0, 2)) || 0,
+        minutes: parseInt(sleepRow.SleepStart?.slice(3, 5)) || 0,
+      };
+
+      wakeTime = {
+        hours: parseInt(sleepRow.SleepEnd?.slice(0, 2)) || 0,
+        minutes: parseInt(sleepRow.SleepEnd?.slice(3, 5)) || 0,
+      };
     }
 
-    // ✅ 2) 오늘 스마트폰 사용 시간 (임시)
-    const screenTime = { hours: 0, minutes: 0 };
-
-    // ✅ 3) 오늘 카페인 섭취량
-    const [caffeineRows] = await db.execute(
-      `SELECT DrinkType, COUNT(*) AS cups, SUM(Caffeine_Amount) AS totalMg
-       FROM CaffeineLog
-       WHERE UserID = ?
-       GROUP BY DrinkType
-       ORDER BY totalMg DESC`,
-      [userId]
+    // ✅ 2) 최근 스크린타임 1건
+    const [[screenRow]] = await db.execute(
+      `
+      SELECT Total_ScreenTime
+      FROM ScreenTimeRecord
+      WHERE userid = ?
+      ORDER BY DateValue DESC
+      LIMIT 1
+      `,
+      [userid]
     );
 
-    let caffeine = { type: "없음", cups: 0, mg: 0 };
-
-    if (caffeineRows.length > 0) {
-      caffeine.type = caffeineRows[0].DrinkType;
-      caffeine.cups = caffeineRows.reduce((s, r) => s + r.cups, 0);
-      caffeine.mg = caffeineRows.reduce((s, r) => s + r.totalMg, 0);
+    let screenTime = { hours: 0, minutes: 0 };
+    if (screenRow) {
+      screenTime = {
+        hours: Math.floor(screenRow.Total_ScreenTime / 60),
+        minutes: screenRow.Total_ScreenTime % 60,
+      };
     }
 
+    // ✅ 3) 최근 카페인 기록 (하루 총합)
+    const [caffeineRows] = await db.execute(
+      `
+      SELECT 
+        COUNT(*) AS cups, 
+        SUM(Caffeine_Amount) AS totalMg
+      FROM CaffeineLog
+      WHERE userid = ?
+      GROUP BY DATE(created_at)
+      ORDER BY DATE(created_at) DESC
+      LIMIT 1
+      `,
+      [userid]
+    );
+
+    let caffeine = { type: "종류 정보 없음", cups: 0, mg: 0 };
+
+    if (caffeineRows.length > 0) {
+      const latest = caffeineRows[0];
+      caffeine = {
+        type: "종류 정보 없음",   // DrinkType 제거했기 때문에 기본값 유지
+        cups: latest.cups,
+        mg: latest.totalMg,
+      };
+    }
+
+    // 🔥 최종 응답
     res.json({
       totalSleep,
       sleepTime,
       wakeTime,
       screenTime,
-      caffeine
+      caffeine,
     });
 
   } catch (err) {
